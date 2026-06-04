@@ -280,6 +280,19 @@ let pitch=-0.3,yaw=0;
 let pointerLocked=false;
 let moveSpeed=50;
 let mouseSens=2;
+let isSettingsOpen=false;
+
+// Settings functions (declared first to avoid hoisting issues)
+function openSettings(){
+  isSettingsOpen=true;
+  document.exitPointerLock();
+  document.getElementById('settings').style.display='flex';
+}
+function closeSettings(){
+  isSettingsOpen=false;
+  document.getElementById('settings').style.display='none';
+}
+window.closeSettings=closeSettings;
 
 document.addEventListener('keydown',e=>{
   keys[e.code]=true;
@@ -313,19 +326,6 @@ document.addEventListener('pointerlockchange',()=>{
     // Don't show tooltip immediately
   }
 });
-
-// Settings panel
-let isSettingsOpen=false;
-function openSettings(){
-  isSettingsOpen=true;
-  document.exitPointerLock();
-  document.getElementById('settings').style.display='flex';
-}
-function closeSettings(){
-  isSettingsOpen=false;
-  document.getElementById('settings').style.display='none';
-}
-window.closeSettings=closeSettings;
 
 // Settings sliders
 document.getElementById('speed-val').addEventListener('input',e=>{
