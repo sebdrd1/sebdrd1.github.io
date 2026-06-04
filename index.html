@@ -28,6 +28,19 @@ canvas:active{cursor:grabbing}
 #crosshair::after{width:100%;height:2px;top:50%;transform:translateY(-50%)}
 #biome-label{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.7);padding:8px 14px;border-radius:8px;font-size:13px;color:#e94560;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);display:none}
 #tooltip{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:6px 12px;border-radius:6px;font-size:12px;color:#aaa;z-index:10;display:none;pointer-events:none}
+#settings{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(8px)}
+#settings .panel{background:linear-gradient(135deg,#1a1a2e,#16213e);border:1px solid rgba(255,255,255,.15);border-radius:12px;padding:24px 32px;min-width:320px;max-width:90vw}
+#settings h2{color:#e94560;font-size:1.4em;margin-bottom:16px;text-align:center}
+#settings .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;font-size:13px}
+#settings .row label{color:#aaa}
+#settings .row input[type=range]{width:140px;accent-color:#e94560}
+#settings .row .val{color:#e94560;min-width:36px;text-align:right;font-weight:bold}
+#settings .close-btn{display:block;margin:16px auto 0;background:#e94560;color:#fff;border:none;padding:8px 24px;border-radius:6px;cursor:pointer;font-size:14px}
+#settings .close-btn:hover{background:#c0392b}
+#settings .key-list{margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)}
+#settings .key-list h3{color:#aaa;font-size:12px;margin-bottom:8px}
+#settings .key-list div{font-size:11px;color:#888;line-height:1.8}
+#settings .key-list kbd{background:#333;padding:1px 5px;border-radius:3px;font-size:10px;color:#ccc}
 </style>
 </head>
 <body>
@@ -54,7 +67,22 @@ canvas:active{cursor:grabbing}
 
 <div id="menu"></div>
 
-<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+<div id="settings">
+<div class="panel">
+<h2>⚙️ Paramètres</h2>
+<div class="row"><label>Vitesse déplacement</label><input type="range" id="speed-val" min="10" max="100" value="50"><span class="val" id="speed-disp">50</span></div>
+<div class="row"><label>Sensibilité souris</label><input type="range" id="sens-val" min="1" max="10" value="2"><span class="val" id="sens-disp">2</span></div>
+<div class="row"><label>Distance de brouillard</label><input type="range" id="fog-val" min="10" max="200" value="80"><span class="val" id="fog-disp">80</span></div>
+<button class="close-btn" onclick="closeSettings()">✕ Fermer</button>
+<div class="key-list">
+<h3>⌨️ Raccourcis</h3>
+<div><kbd>W A S D</kbd> Déplacement</div>
+<div><kbd>Espace</kbd> Monter &nbsp; <kbd>Shift</kbd> Descendre</div>
+<div><kbd>1-9</kbd> Biomes 1-9 &nbsp; <kbd>Numpad</kbd> Biomes 10-16</div>
+<div><kbd>Échap</kbd> Paramètres / Libérer souris</div>
+</div>
+</div>
+</div>
 <script>
 // ========== CONFIG ==========
 const BIOMES=[
@@ -250,28 +278,68 @@ setLoad(40,'Configuration des contrôles...');
 const keys={};
 let pitch=-0.3,yaw=0;
 let pointerLocked=false;
+let moveSpeed=50;
+let mouseSens=2;
 
 document.addEventListener('keydown',e=>{
   keys[e.code]=true;
-  if(e.code==='Escape')document.exitPointerLock();
-  // Prevent default for game keys
+  if(e.code==='Escape'){
+    if(pointerLocked){
+      document.exitPointerLock();
+    } else {
+      openSettings();
+    }
+  }
   if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
 });
 document.addEventListener('keyup',e=>keys[e.code]=false);
 
 document.addEventListener('mousemove',e=>{
   if(!pointerLocked)return;
-  yaw-=e.movementX*0.002;
-  pitch-=e.movementY*0.002;
+  yaw-=e.movementX*0.001*mouseSens;
+  pitch-=e.movementY*0.001*mouseSens;
   pitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,pitch));
 });
 
 renderer.domElement.addEventListener('click',()=>{
-  renderer.domElement.requestPointerLock();
-  document.getElementById('tooltip').style.display='none';
+  if(!pointerLocked){
+    renderer.domElement.requestPointerLock();
+    document.getElementById('tooltip').style.display='none';
+  }
 });
 document.addEventListener('pointerlockchange',()=>{
   pointerLocked=document.pointerLockElement===renderer.domElement;
+  if(!pointerLocked&&!isSettingsOpen){
+    // Don't show tooltip immediately
+  }
+});
+
+// Settings panel
+let isSettingsOpen=false;
+function openSettings(){
+  isSettingsOpen=true;
+  document.exitPointerLock();
+  document.getElementById('settings').style.display='flex';
+}
+function closeSettings(){
+  isSettingsOpen=false;
+  document.getElementById('settings').style.display='none';
+}
+window.closeSettings=closeSettings;
+
+// Settings sliders
+document.getElementById('speed-val').addEventListener('input',e=>{
+  moveSpeed=parseInt(e.target.value);
+  document.getElementById('speed-disp').textContent=moveSpeed;
+});
+document.getElementById('sens-val').addEventListener('input',e=>{
+  mouseSens=parseInt(e.target.value);
+  document.getElementById('sens-disp').textContent=mouseSens;
+});
+document.getElementById('fog-val').addEventListener('input',e=>{
+  const v=parseInt(e.target.value);
+  document.getElementById('fog-disp').textContent=v;
+  if(scene.fog)scene.fog.density=0.0002*v;
 });
 
 // Biome teleport keys
@@ -322,7 +390,7 @@ function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),0.1);
 
-  const speed=50*dt;
+  const speed=moveSpeed*dt;
   const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
   const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
 
