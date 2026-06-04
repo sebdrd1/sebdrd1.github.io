@@ -7,25 +7,27 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#1a1a2e;color:#eee;font-family:'Segoe UI',sans-serif;overflow:hidden}
-#loading{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .5s}
+#loading{position:fixed;inset:0;background:linear-gradient(135deg,#1a1a2e,#16213e);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1000;transition:opacity .5s}
+#loading.hidden{opacity:0;pointer-events:none}
 #loading h1{font-size:2.5em;color:#e94560;text-shadow:0 0 20px #e94560;margin-bottom:10px}
 #loading p{color:#aaa;margin-bottom:20px}
 #loading .bar{width:300px;height:6px;background:#333;border-radius:3px;overflow:hidden}
 #loading .bar .fill{height:100%;width:0;background:linear-gradient(90deg,#e94560,#0f3460);border-radius:3px;transition:width .3s}
-canvas{display:block;cursor:grab}
+canvas{display:block;cursor:grab;outline:none}
 canvas:active{cursor:grabbing}
-#hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.7);padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.6;pointer-events:none;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1)}
+#hud{position:fixed;top:10px;left:10px;background:rgba(0,0,0,.7);padding:12px 16px;border-radius:8px;font-size:13px;line-height:1.6;pointer-events:none;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);display:none}
 #hud .title{color:#e94560;font-weight:bold;font-size:15px;margin-bottom:4px}
 #hud kbd{background:#333;padding:1px 5px;border-radius:3px;font-size:11px}
-#menu{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:8px 16px;border-radius:8px;display:flex;gap:8px;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1)}
-#menu button{background:#0f3460;color:#eee;border:none;padding:6px 12px;border-radius:5px;cursor:pointer;font-size:12px;transition:all .2s}
-#menu button:hover{background:#e94560}
+#menu{position:fixed;bottom:10px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.8);padding:8px 12px;border-radius:8px;display:none;gap:4px;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);flex-wrap:wrap;justify-content:center;max-width:90vw}
+#menu button{background:#0f3460;color:#eee;border:none;padding:5px 10px;border-radius:5px;cursor:pointer;font-size:11px;transition:all .2s;white-space:nowrap}
+#menu button:hover{background:#e94560;transform:scale(1.05)}
 #menu button.active{background:#e94560}
-#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;pointer-events:none;z-index:5}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:20px;height:20px;pointer-events:none;z-index:5;display:none}
 #crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,.5)}
 #crosshair::before{width:2px;height:100%;left:50%;transform:translateX(-50%)}
 #crosshair::after{width:100%;height:2px;top:50%;transform:translateY(-50%)}
-#biome-label{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.7);padding:8px 14px;border-radius:8px;font-size:13px;color:#e94560;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1)}
+#biome-label{position:fixed;top:10px;right:10px;background:rgba(0,0,0,.7);padding:8px 14px;border-radius:8px;font-size:13px;color:#e94560;z-index:10;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.1);display:none}
+#tooltip{position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.75);padding:6px 12px;border-radius:6px;font-size:12px;color:#aaa;z-index:10;display:none;pointer-events:none}
 </style>
 </head>
 <body>
@@ -37,62 +39,45 @@ canvas:active{cursor:grabbing}
 <p id="load-text" style="margin-top:8px;color:#666;font-size:12px">Initialisation...</p>
 </div>
 
-<div id="hud" style="display:none">
+<div id="hud">
 <div class="title">⚔️ Realm of Legends</div>
-<div><kbd>W A S D</kbd> Déplacement</div>
+<div><kbd>W A S D</kbd> Se déplacer</div>
 <div><kbd>Espace</kbd> Monter &nbsp; <kbd>Shift</kbd> Descendre</div>
-<div><kbd>Souris</kbd> Regarder</div>
+<div><kbd>Souris</kbd> Regarder (cliquer)</div>
 <div><kbd>1-9</kbd> Téléportation biome</div>
-<div><kbd>Échap</kbd> Menu</div>
 <div id="coords" style="margin-top:4px;color:#aaa">X: 0 Y: 0 Z: 0</div>
 </div>
 
-<div id="biome-label" style="display:none">🌲 Forêt</div>
+<div id="biome-label">🌲 Forêt</div>
+<div id="crosshair"></div>
+<div id="tooltip">Cliquez pour capturer la souris</div>
 
-<div id="crosshair" style="display:none"></div>
-
-<div id="menu" style="display:none">
-<button onclick="tpBiome(0)">🌲 Forêt</button>
-<button onclick="tpBiome(1)">🏔️ Montagne</button>
-<button onclick="tpBiome(2)">🏜️ Désert</button>
-<button onclick="tpBiome(3)">❄️ Toundra</button>
-<button onclick="tpBiome(4)">🌋 Volcan</button>
-<button onclick="tpBiome(5)">🌊 Océan</button>
-<button onclick="tpBiome(6)">🌿 Jungle</button>
-<button onclick="tpBiome(7)">💎 Crystal</button>
-<button onclick="tpBiome(8)">🍄 Champi</button>
-<button onclick="tpBiome(9)">🌾 Plaine</button>
-<button onclick="tpBiome(10)">🏛️ Ruines</button>
-<button onclick="tpBiome(11)">🌙 Sombre</button>
-<button onclick="tpBiome(12)">🔥 Lave</button>
-<button onclick="tpBiome(13)">☁️ Ciel</button>
-<button onclick="tpBiome(14)">🌺 Floral</button>
-<button onclick="tpBiome(15)">⚡ Storm</button>
-</div>
+<div id="menu"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 // ========== CONFIG ==========
 const BIOMES=[
-{name:'🌲 Forêt',color:0x2d5a27,ground:0x3a7d32,sky:0x87ceeb,tree:0x228b22,treeTrunk:0x8b4513,fog:0x88aa88,density:120},
-{name:'🏔️ Montagne',color:0x6b6b6b,ground:0x808080,sky:0xb0c4de,tree:0x556b2f,treeTrunk:0x654321,fog:0x999999,density:80},
-{name:'🏜️ Désert',color:0xd4a574,ground:0xe8c872,sky:0xffd700,tree:0xdaa520,treeTrunk:0x8b7355,fog:0xd4a574,density:30},
-{name:'❄️ Toundra',color:0xe8e8e8,ground:0xf0f0f0,sky:0xadd8e6,tree:0x2f4f4f,treeTrunk:0x4a4a4a,fog:0xdddddd,density:40},
-{name:'🌋 Volcan',color:0x3d0c02,ground:0x4a0e0e,sky:0x8b0000,tree:0x8b0000,treeTrunk:0x2d0000,fog:0x4a0e0e,density:50},
-{name:'🌊 Océan',color:0x006994,ground:0x0077b6,sky:0x00b4d8,tree:0x20b2aa,treeTrunk:0x008080,fog:0x0077b6,density:20},
-{name:'🌿 Jungle',color:0x0b3d0b,ground:0x1a5c1a,sky:0x4a7c59,tree:0x006400,treeTrunk:0x5c4033,fog:0x2d5a27,density:160},
-{name:'💎 Crystal',color:0x9b59b6,ground:0x8e44ad,sky:0xd2b4de,tree:0xe74c3c,treeTrunk:0x6c3483,fog:0x9b59b6,density:60},
-{name:'🍄 Champi',color:0x8b008b,ground:0x9932cc,sky:0xda70d6,tree:0xff6347,treeTrunk:0x8b008b,fog:0x9932cc,density:70},
-{name:'🌾 Plaine',color:0x7cba3d,ground:0x8bc34a,sky:0x87ceeb,tree:0x6b8e23,treeTrunk:0x8b7355,fog:0xa8d8a8,density:50},
-{name:'🏛️ Ruines',color:0x8b8682,ground:0xa8a39d,sky:0xc0b283,tree:0x696969,treeTrunk:0x4a4a4a,fog:0x8b8682,density:45},
-{name:'🌙 Sombre',color:0x1a1a2e,ground:0x16213e,sky:0x0f3460,tree:0x2c003e,treeTrunk:0x1a001a,fog:0x1a1a2e,density:90},
-{name:'🔥 Lave',color:0xff4500,ground:0xff6347,sky:0xff8c00,tree:0xff0000,treeTrunk:0x8b0000,fog:0xff4500,density:25},
-{name:'☁️ Ciel',color:0xf0f8ff,ground:0xe6f3ff,sky:0x87ceeb,tree:0xffffff,treeTrunk:0xddd,fog:0xe6f3ff,density:35},
-{name:'🌺 Floral',color:0xff69b4,ground:0xffb6c1,sky:0xffe4e1,tree:0xff1493,treeTrunk:0xc71585,fog:0xffb6c1,density:100},
-{name:'⚡ Storm',color:0x2c3e50,ground:0x34495e,sky:0x1a1a2e,tree:0x1abc9c,treeTrunk:0x16a085,fog:0x2c3e50,density:55}
+{name:'🌲 Forêt',ground:0x3a7d32,top:0x4CAF50,sky:0x87ceeb,foliage:0x228b22,trunk:0x8b4513,fog:0xa8d8a8,density:0.15,height:3},
+{name:'🏔️ Montagne',ground:0x808080,top:0xeeeeee,sky:0xb0c4de,foliage:0x556b2f,trunk:0x654321,fog:0xbbbbbb,density:0.06,height:8},
+{name:'🏜️ Désert',ground:0xe8c872,top:0xf0d890,sky:0xffd700,foliage:0xdaa520,trunk:0x8b7355,fog:0xd4a574,density:0.02,height:2},
+{name:'❄️ Tundra',ground:0xf0f0f0,top:0xffffff,sky:0xadd8e6,foliage:0x2f4f4f,trunk:0x4a4a4a,fog:0xdddddd,density:0.03,height:2},
+{name:'🌋 Volcan',ground:0x4a0e0e,top:0x3d0c02,sky:0x8b0000,foliage:0x8b0000,trunk:0x2d0000,fog:0x4a0e0e,density:0.04,height:4},
+{name:'🌊 Océan',ground:0x0077b6,top:0x0096c7,sky:0x00b4d8,foliage:0x20b2aa,trunk:0x008080,fog:0x0077b6,density:0.01,height:1},
+{name:'🌿 Jungle',ground:0x1a5c1a,top:0x2d7a2d,sky:0x4a7c59,foliage:0x006400,trunk:0x5c4033,fog:0x2d5a27,density:0.22,height:4},
+{name:'💎 Crystal',ground:0x8e44ad,top:0x9b59b6,sky:0xd2b4de,foliage:0xe74c3c,trunk:0x6c3483,fog:0x9b59b6,density:0.06,height:3},
+{name:'🍄 Champignon',ground:0x9932cc,top:0x8b008b,sky:0xda70d6,foliage:0xff6347,trunk:0x8b008b,fog:0x9932cc,density:0.08,height:3},
+{name:'🌾 Plaine',ground:0x8bc34a,top:0x7cba3d,sky:0x87ceeb,foliage:0x6b8e23,trunk:0x8b7355,fog:0xa8d8a8,density:0.04,height:2},
+{name:'🏛️ Ruines',ground:0xa8a39d,top:0x8b8682,sky:0xc0b283,foliage:0x696969,trunk:0x4a4a4a,fog:0x8b8682,density:0.03,height:3},
+{name:'🌙 Sombre',ground:0x16213e,top:0x1a1a2e,sky:0x0f3460,foliage:0x2c003e,trunk:0x1a001a,fog:0x1a1a2e,density:0.1,height:3},
+{name:'🔥 Lave',ground:0xff6347,top:0xff4500,sky:0xff8c00,foliage:0xff0000,trunk:0x8b0000,fog:0xff4500,density:0.01,height:2},
+{name:'☁️ Ciel',ground:0xe6f3ff,top:0xf0f8ff,sky:0x87ceeb,foliage:0xffffff,trunk:0xdddddd,fog:0xe6f3ff,density:0.02,height:2},
+{name:'🌺 Floral',ground:0xffb6c1,top:0xff69b4,sky:0xffe4e1,foliage:0xff1493,trunk:0xc71585,fog:0xffb6c1,density:0.12,height:2},
+{name:'⚡ Tempête',ground:0x34495e,top:0x2c3e50,sky:0x1a1a2e,foliage:0x1abc9c,trunk:0x16a085,fog:0x2c3e50,density:0.04,height:3}
 ];
 
 // ========== LOADING ==========
+const loadingEl=document.getElementById('loading');
 const loadFill=document.getElementById('load-fill');
 const loadText=document.getElementById('load-text');
 function setLoad(pct,txt){loadFill.style.width=pct+'%';if(txt)loadText.textContent=txt}
@@ -100,203 +85,212 @@ function setLoad(pct,txt){loadFill.style.width=pct+'%';if(txt)loadText.textConte
 // ========== THREE.JS ==========
 setLoad(5,'Création de la scène...');
 const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,1000);
+const camera=new THREE.PerspectiveCamera(75,window.innerWidth/window.innerHeight,0.1,500);
 const renderer=new THREE.WebGLRenderer({antialias:true});
 renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-renderer.shadowMap.enabled=true;
-renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=false;
 document.body.appendChild(renderer.domElement);
-
-setLoad(10,'Configuration des biomes...');
-let currentBiome=0;
-let voxels=[];
-let voxelGeo=null;
-
-// Instanced mesh for performance
-const MAX_VOXELS=50000;
-const instancedMesh=new THREE.InstancedMesh(
-  new THREE.BoxGeometry(1,1,1),
-  new THREE.MeshLambertMaterial(),
-  MAX_VOXELS
-);
-instancedMesh.count=0;
-instancedMesh.castShadow=true;
-instancedMesh.receiveShadow=true;
-scene.add(instancedMesh);
 
 setLoad(15,'Génération du terrain...');
 
+// Instanced mesh for voxels
+const MAX_VOXELS=40000;
+const VOXEL_GEO=new THREE.BoxGeometry(1,1,1);
+const instancedMesh=new THREE.InstancedMesh(VOXEL_GEO,new THREE.MeshLambertMaterial(),MAX_VOXELS);
+instancedMesh.count=0;
+scene.add(instancedMesh);
+
+// Ground plane (separate, not instanced)
+let groundMesh=null;
+
+const dummy=new THREE.Object3D();
+const color=new THREE.Color();
+
 function generateBiome(biomeIndex){
-  // Clear old
-  instancedMesh.count=0;
-  voxels=[];
-  
   const b=BIOMES[biomeIndex];
   scene.background=new THREE.Color(b.sky);
-  scene.fog=new THREE.Fog(b.fog,30,120);
-  
+  scene.fog=new THREE.FogExp2(b.fog,0.012);
+
   // Lights
   scene.children.filter(c=>c.isLight).forEach(c=>scene.remove(c));
-  const ambient=new THREE.AmbientLight(0xffffff,0.5);
-  scene.add(ambient);
-  const sun=new THREE.DirectionalLight(0xffffff,1);
+  scene.add(new THREE.AmbientLight(0xffffff,0.6));
+  const sun=new THREE.DirectionalLight(0xffffff,0.9);
   sun.position.set(50,80,30);
-  sun.castShadow=true;
-  sun.shadow.mapSize.set(1024,1024);
-  sun.shadow.camera.near=0.5;
-  sun.shadow.camera.far=200;
-  sun.shadow.camera.left=-60;
-  sun.shadow.camera.right=60;
-  sun.shadow.camera.top=60;
-  sun.shadow.camera.bottom=-60;
   scene.add(sun);
-  
-  // Ground layer
+
+  // Remove old ground
+  if(groundMesh){scene.remove(groundMesh);groundMesh.geometry.dispose();groundMesh.material.dispose()}
+
+  // Remove old instanced mesh and recreate
+  scene.remove(instancedMesh);
+
+  const mesh=new THREE.InstancedMesh(VOXEL_GEO,new THREE.MeshLambertMaterial(),MAX_VOXELS);
+  mesh.count=0;
+
+  // New ground
   const groundGeo=new THREE.PlaneGeometry(200,200);
-  const groundMat=new THREE.MeshLambertMaterial({color:b.ground});
-  const ground=new THREE.Mesh(groundGeo,groundMat);
-  ground.rotation.x=-Math.PI/2;
-  ground.position.y=-0.5;
-  ground.receiveShadow=true;
-  scene.add(ground);
-  
+  const groundMat=new THREE.MeshLambertMaterial({color:b.top});
+  groundMesh=new THREE.Mesh(groundGeo,groundMat);
+  groundMesh.rotation.x=-Math.PI/2;
+  groundMesh.position.y=-0.5;
+  scene.add(groundMesh);
+
   // Generate voxel terrain
-  const dummy=new THREE.Object3D();
   let count=0;
-  const range=40;
-  
-  for(let x=-range;x<range;x++){
-    for(let z=-range;z<range;z++){
-      // Height variation
-      const h=Math.floor(
-        Math.sin(x*0.1)*2+Math.cos(z*0.2)*2+
-        Math.sin(x*0.05+z*0.05)*3+
-        (biomeIndex===1?Math.abs(x)*0.15:0)+ // mountains
-        (biomeIndex===5?-2:0)+ // ocean lower
-        3
+  const R=35;
+
+  for(let x=-R;x<R;x++){
+    for(let z=-R;z<R;z++){
+      // Height
+      let h=Math.floor(
+        Math.sin(x*0.08)*3+Math.cos(z*0.12)*2+
+        Math.sin((x+z)*0.04)*4
       );
-      
-      // Ground voxels
-      for(let y=0;y<=Math.max(0,h);y++){
+      h=Math.max(0,h+b.height);
+
+      // Mountains
+      if(biomeIndex===1)h+=Math.floor(Math.abs(x)*0.12)+Math.floor(Math.abs(z)*0.08);
+
+      // Ground column
+      for(let y=0;y<=h;y++){
         if(count>=MAX_VOXELS)break;
-        dummy.position.set(x,y,z);
+        dummy.position.set(x+0.5,y,z+0.5);
         dummy.updateMatrix();
-        instancedMesh.setMatrixAt(count,dummy.matrix);
-        const c=y===h?b.ground:(y<h*0.5?0x8b7355:b.color);
-        instancedMesh.setColorAt(count,new THREE.Color(c));
+        mesh.setMatrixAt(count,dummy.matrix);
+        if(y===h){mesh.setColorAt(count,color.setHex(b.top))}
+        else if(y<h*0.4){mesh.setColorAt(count,color.setHex(0x8b7355))}
+        else{mesh.setColorAt(count,color.setHex(b.ground))}
         count++;
       }
-      
-      // Trees/structures
-      if(count<MAX_VOXELS&&Math.random()<b.density/400&&h>1){
-        const treeH=3+Math.floor(Math.random()*4);
-        for(let ty=0;ty<treeH;ty++){
-          if(count>=MAX_VOXELS)break;
-          dummy.position.set(x,h+1+ty,z);
+
+      // Trees
+      if(count<MAX_VOXELS&&Math.random()<b.density&&h>=2){
+        const tH=3+Math.floor(Math.random()*3);
+        for(let ty=0;ty<tH&&count<MAX_VOXELS;ty++){
+          dummy.position.set(x+0.5,h+1+ty,z+0.5);
           dummy.updateMatrix();
-          instancedMesh.setMatrixAt(count,dummy.matrix);
-          instancedMesh.setColorAt(count,new THREE.Color(ty<treeH-1?b.treeTrunk:b.tree));
+          mesh.setMatrixAt(count,dummy.matrix);
+          mesh.setColorAt(count,color.setHex(ty<tH-1?b.trunk:b.foliage));
           count++;
         }
-        // Leaves
+        // Canopy
         for(let lx=-1;lx<=1;lx++)for(let lz=-1;lz<=1;lz++){
           if(count>=MAX_VOXELS)break;
-          dummy.position.set(x+lx,h+treeH,z+lz);
+          if(lx===0&&lz===0)continue;
+          dummy.position.set(x+0.5+lx,h+tH,z+0.5+lz);
           dummy.updateMatrix();
-          instancedMesh.setMatrixAt(count,dummy.matrix);
-          instancedMesh.setColorAt(count,new THREE.Color(b.tree));
+          mesh.setMatrixAt(count,dummy.matrix);
+          mesh.setColorAt(count,color.setHex(b.foliage));
           count++;
         }
       }
-      
-      // Special biome features
-      if(biomeIndex===4&&Math.random()<0.02&&count<MAX_VOXELS){
-        // Lava pools
-        dummy.position.set(x,0,z);
+
+      // Special: crystals
+      if(biomeIndex===7&&count<MAX_VOXELS&&Math.random()<0.03){
+        const cH=2+Math.floor(Math.random()*4);
+        for(let cy=0;cy<cH&&count<MAX_VOXELS;cy++){
+          dummy.position.set(x+0.5,h+1+cy,z+0.5);
+          dummy.updateMatrix();
+          mesh.setMatrixAt(count,dummy.matrix);
+          mesh.setColorAt(count,color.setHex([0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6][cy%5]));
+          count++;
+        }
+      }
+
+      // Special: lava
+      if(biomeIndex===12&&count<MAX_VOXELS&&Math.random()<0.015){
+        dummy.position.set(x+0.5,0,z+0.5);
         dummy.updateMatrix();
-        instancedMesh.setMatrixAt(count,dummy.matrix);
-        instancedMesh.setColorAt(count,new THREE.Color(0xff4500));
+        mesh.setMatrixAt(count,dummy.matrix);
+        mesh.setColorAt(count,color.setHex(0xff4500));
         count++;
-      }
-      if(biomeIndex===7&&Math.random()<0.03&&count<MAX_VOXELS){
-        // Crystals
-        const cH=2+Math.floor(Math.random()*3);
-        for(let cy=0;cy<cH;cy++){
-          dummy.position.set(x,h+1+cy,z);
-          dummy.updateMatrix();
-          instancedMesh.setMatrixAt(count,dummy.matrix);
-          instancedMesh.setColorAt(count,new THREE.Color([0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6][cy%5]));
-          count++;
-        }
       }
     }
   }
-  
-  instancedMesh.count=count;
-  instancedMesh.instanceMatrix.needsUpdate=true;
-  if(instancedMesh.instanceColor)instancedMesh.instanceColor.needsUpdate=true;
-  
-  // Reset camera
+
+  mesh.count=count;
+  mesh.instanceMatrix.needsUpdate=true;
+  if(mesh.instanceColor)mesh.instanceColor.needsUpdate=true;
+  scene.add(mesh);
+
+  // Replace reference
+  instancedMesh.count=mesh.count;
+  scene.remove(instancedMesh);
+
   camera.position.set(0,15,30);
   camera.lookAt(0,0,0);
-  
-  return ground;
+
+  return mesh;
 }
 
-let groundMesh=null;
+let currentMesh=null;
 
 function switchBiome(i){
-  currentBiome=i;
-  if(groundMesh)scene.remove(groundMesh);
-  groundMesh=generateBiome(i);
+  generateBiome(i);
   document.getElementById('biome-label').textContent=BIOMES[i].name;
 }
 
+// ========== MENU ==========
+const menuEl=document.getElementById('menu');
+BIOMES.forEach((b,i)=>{
+  const btn=document.createElement('button');
+  btn.textContent=b.name;
+  btn.onclick=()=>{
+    switchBiome(i);
+    document.querySelectorAll('#menu button').forEach(x=>x.classList.remove('active'));
+    btn.classList.add('active');
+  };
+  if(i===0)btn.classList.add('active');
+  menuEl.appendChild(btn);
+});
+
 // ========== CONTROLS ==========
-setLoad(30,'Configuration des contrôles...');
+setLoad(40,'Configuration des contrôles...');
 const keys={};
-let mouseX=0,mouseY=0;
 let pitch=-0.3,yaw=0;
 let pointerLocked=false;
 
-document.addEventListener('keydown',e=>{keys[e.code]=true;if(e.code==='Escape')document.exitPointerLock()});
+document.addEventListener('keydown',e=>{
+  keys[e.code]=true;
+  if(e.code==='Escape')document.exitPointerLock();
+  // Prevent default for game keys
+  if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
+});
 document.addEventListener('keyup',e=>keys[e.code]=false);
 
 document.addEventListener('mousemove',e=>{
   if(!pointerLocked)return;
   yaw-=e.movementX*0.002;
   pitch-=e.movementY*0.002;
-  pitch=Math.max(-Math.PI/2+0.1,Math.min(Math.PI/2-0.1,pitch));
+  pitch=Math.max(-Math.PI/2+0.05,Math.min(Math.PI/2-0.05,pitch));
 });
 
 renderer.domElement.addEventListener('click',()=>{
   renderer.domElement.requestPointerLock();
+  document.getElementById('tooltip').style.display='none';
 });
 document.addEventListener('pointerlockchange',()=>{
   pointerLocked=document.pointerLockElement===renderer.domElement;
 });
 
-// Biome teleport
-function tpBiome(i){
-  switchBiome(i);
-  camera.position.set(0,15,30);
-  pitch=-0.3;yaw=0;
-}
-window.tpBiome=tpBiome;
-
-// Number keys
+// Biome teleport keys
 document.addEventListener('keydown',e=>{
   const n=parseInt(e.key);
   if(n>=1&&n<=9)tpBiome(n-1);
-  if(e.code==='Numpad0')tpBiome(9);
-  if(e.code==='Numpad1')tpBiome(10);
-  if(e.code==='Numpad2')tpBiome(11);
-  if(e.code==='Numpad3')tpBiome(12);
-  if(e.code==='Numpad4')tpBiome(13);
-  if(e.code==='Numpad5')tpBiome(14);
-  if(e.code==='Numpad6')tpBiome(15);
+  // Numpad
+  const np={'Numpad0':9,'Numpad1':10,'Numpad2':11,'Numpad3':12,'Numpad4':13,'Numpad5':14,'Numpad6':15};
+  if(np[e.code]!==undefined)tpBiome(np[e.code]);
 });
+
+function tpBiome(i){
+  if(i<0||i>=BIOMES.length)return;
+  switchBiome(i);
+  camera.position.set(0,15,30);
+  pitch=-0.3;yaw=0;
+  document.querySelectorAll('#menu button').forEach((x,idx)=>x.classList.toggle('active',idx===i));
+}
+window.tpBiome=tpBiome;
 
 // ========== RESIZE ==========
 window.addEventListener('resize',()=>{
@@ -305,52 +299,49 @@ window.addEventListener('resize',()=>{
   renderer.setSize(window.innerWidth,window.innerHeight);
 });
 
+// ========== INIT ==========
+setLoad(60,'Génération du monde...');
+generateBiome(0);
+
+setLoad(100,'Prêt ! ⛏️');
+
+// Hide loading
+setTimeout(()=>{
+  loadingEl.classList.add('hidden');
+  setTimeout(()=>{loadingEl.style.display='none'},500);
+  document.getElementById('hud').style.display='block';
+  document.getElementById('biome-label').style.display='block';
+  document.getElementById('crosshair').style.display='block';
+  menuEl.style.display='flex';
+  document.getElementById('tooltip').style.display='block';
+},500);
+
 // ========== ANIMATION ==========
-setLoad(50,'Génération du monde...');
-switchBiome(0);
-
-setLoad(80,'Finalisation...');
 const clock=new THREE.Clock();
-
 function animate(){
   requestAnimationFrame(animate);
   const dt=Math.min(clock.getDelta(),0.1);
-  
-  // Movement
-  const speed=40*dt;
+
+  const speed=50*dt;
   const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
   const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
-  
+
   if(keys['KeyW'])camera.position.addScaledVector(fwd,speed);
-  if(keys['KeyS'])camera.position.addScaledVector(fwd,-speed);
+  if(keys['KeyS'])camera.position.addScaledVector(fwd,-speed*0.7);
   if(keys['KeyA'])camera.position.addScaledVector(right,-speed);
   if(keys['KeyD'])camera.position.addScaledVector(right,speed);
   if(keys['Space'])camera.position.y+=speed;
   if(keys['ShiftLeft']||keys['ShiftRight'])camera.position.y-=speed;
-  
-  // Camera look
+
   camera.rotation.order='YXZ';
   camera.rotation.y=yaw;
   camera.rotation.x=pitch;
-  
-  // Update HUD
+
   const p=camera.position;
   document.getElementById('coords').textContent=`X:${Math.round(p.x)} Y:${Math.round(p.y)} Z:${Math.round(p.z)}`;
-  
+
   renderer.render(scene,camera);
 }
-
-// Finish loading
-setLoad(100,'Prêt !');
-setTimeout(()=>{
-  document.getElementById('loading').style.opacity='0';
-  setTimeout(()=>{document.getElementById('loading').style.display='none'},500);
-  document.getElementById('hud').style.display='block';
-  document.getElementById('biome-label').style.display='block';
-  document.getElementById('crosshair').style.display='block';
-  document.getElementById('menu').style.display='flex';
-},300);
-
 animate();
 </script>
 </body>
