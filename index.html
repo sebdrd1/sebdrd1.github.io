@@ -127,32 +127,72 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 document.body.appendChild(renderer.domElement);
 loadPct(8,'Chargement...');
 
-// ============ GRID ============
-// Grille au sol: de -200000 à +200000
-var G_HALF=80000, G_STEP=500; // tous les 500 unités = 800 lignes total
-var G_CNT=Math.floor(G_HALF/G_STEP);
-var gPos=new Float32Array(G_CNT*4*6);
-var idx=0;
-for(var i=-G_HALF;i<=G_HALF;i+=G_STEP){
-  gPos[idx++]=i;gPos[idx++]=0;gPos[idx++]=-G_HALF;
-  gPos[idx++]=i;gPos[idx++]=0;gPos[idx++]=G_HALF;
-  gPos[idx++]=-G_HALF;gPos[idx++]=0;gPos[idx++]=i;
-  gPos[idx++]=G_HALF;gPos[idx++]=0;gPos[idx++]=i;
-}
-var gGeom=new THREE.BufferGeometry();
-gGeom.setAttribute('position',new THREE.BufferAttribute(gPos,3));
-var gMat=new THREE.LineBasicMaterial({color:0x2a2a3a,transparent:true,opacity:.1});
-scene.add(new THREE.LineSegments(gGeom,gMat));
+// ============ GRID CHUNKS (Minecraft-style) ============
+// Grille dynamique: génère des chunks autour du joueur
+var CHUNK_SIZE=80;    // taille d'un chunk = 80 unités
+var GRID_STEP=8;      // ligne tous les 8 unités dans chaque chunk
+var VIEW_DIST=5;      // nombre de chunks visibles dans chaque direction
+var gridChunks={};     // map clé "cx,cz" → LineSegments
+var gMat=new THREE.LineBasicMaterial({color:0x2a2a3a,transparent:true,opacity:.12});
 
-// Axe Z principal (bleu, plus visible)
+function getChunkKey(cx,cz){return cx+','+cz}
+
+function createChunk(cx,cz){
+  var key=getChunkKey(cx,cz);
+  if(gridChunks[key])return;
+  var ox=cx*CHUNK_SIZE, oz=cz*CHUNK_SIZE;
+  var lines=[];
+  var step=GRID_STEP;
+  for(var x=ox;x<=ox+CHUNK_SIZE;x+=step){
+    lines.push(x,0,oz,x,0,oz+CHUNK_SIZE);
+  }
+  for(var z=oz;z<=oz+CHUNK_SIZE;z+=step){
+    lines.push(ox,0,z,ox+CHUNK_SIZE,0,z);
+  }
+  var geom=new THREE.BufferGeometry();
+  geom.setAttribute('position',new THREE.BufferAttribute(new Float32Array(lines),3));
+  var mesh=new THREE.LineSegments(geom,gMat);
+  scene.add(mesh);
+  gridChunks[key]={mesh:mesh,ox:ox,oz:oz};
+}
+
+function updateGridChunks(px,pz){
+  var ccx=Math.floor(px/CHUNK_SIZE);
+  var ccz=Math.floor(pz/CHUNK_SIZE);
+  // Créer les chunks dans le rayon de vision
+  for(var dx=-VIEW_DIST;dx<=VIEW_DIST;dx++){
+    for(var dz=-VIEW_DIST;dz<=VIEW_DIST;dz++){
+      createChunk(ccx+dx,ccz+dz);
+    }
+  }
+  // Supprimer les chunks trop loin (optionnel, pour perf)
+  var keysToRemove=[];
+  for(var key in gridChunks){
+    var parts=key.split(',');
+    var cx=+parts[0],cz=+parts[1];
+    if(Math.abs(cx-ccx)>VIEW_DIST*2||Math.abs(cz-ccz)>VIEW_DIST*2){
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(function(key){
+    var c=gridChunks[key];
+    if(c&&c.mesh){
+      scene.remove(c.mesh);
+      if(c.mesh.geometry)c.mesh.geometry.dispose();
+    }
+    delete gridChunks[key];
+  });
+}
+
+// Axe Z principal (bleu)
 scene.add(new THREE.Line(
-  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-G_HALF),new THREE.Vector3(0,0,G_HALF)]),
-  new THREE.LineBasicMaterial({color:0x3344aa,transparent:true,opacity:.25})
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-1e7),new THREE.Vector3(0,0,1e7)]),
+  new THREE.LineBasicMaterial({color:0x3344aa,transparent:true,opacity:.3})
 ));
-// Axe X principal (rouge, plus visible)
+// Axe X principal (rouge)
 scene.add(new THREE.Line(
-  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-G_HALF,0,0),new THREE.Vector3(G_HALF,0,0)]),
-  new THREE.LineBasicMaterial({color:0xaa3333,transparent:true,opacity:.25})
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-1e7,0,0),new THREE.Vector3(1e7,0,0)]),
+  new THREE.LineBasicMaterial({color:0xaa3333,transparent:true,opacity:.3})
 ));
 
 // ============ BIOMES ============
@@ -472,6 +512,7 @@ touchBtn('btn-down','ShiftLeft');
 
 // ============ LOOP ============
 loadPct(100,'Prêt !');
+updateGridChunks(0,0);
 setTimeout(function(){
   LD.classList.add('done');
   setTimeout(function(){LD.style.display='none'},600);
@@ -519,6 +560,8 @@ var clock=new THREE.Clock();
   camera.rotation.x=pitch;
   var p=camera.position;
   document.getElementById('coords').textContent='X:'+Math.round(p.x)+' Y:'+Math.round(p.y)+' Z:'+Math.round(p.z);
+  // Update grid chunks around player
+  updateGridChunks(p.x,p.z);
   renderer.render(scene,camera);
 })();
 </script>
