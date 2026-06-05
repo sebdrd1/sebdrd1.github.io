@@ -68,6 +68,8 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #touch-btns{position:absolute;right:16px;bottom:195px;display:flex;flex-direction:column;gap:5px;pointer-events:auto}
 .tbtn{width:42px;height:42px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#ccc;font-size:15px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
 .tbtn.touching{background:rgba(233,69,96,.4)!important}
+.tab-btn{background:rgba(255,255,255,.06);color:#888;border:none;padding:4px 10px;border-radius:5px;cursor:pointer;font-size:10px;transition:all .15s}
+.tab-btn.sel{background:#e94560;color:#fff}
 @media(min-width:768px){#touch-ctrl{display:none!important}}
 </style>
 </head>
@@ -85,18 +87,51 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <div id="menu"></div>
 <!-- Settings -->
 <div id="settings">
-<div class="panel">
+<div class="panel" id="settings-panel">
 <h2>⚙️ Paramètres</h2>
+<!-- Tabs -->
+<div style="display:flex;gap:4px;margin-bottom:12px;justify-content:center">
+<button class="tab-btn sel" id="tab-game" onclick="switchTab('game')">🎮 Jeu</button>
+<button class="tab-btn" id="tab-audio" onclick="switchTab('audio')">🔊 Audio</button>
+<button class="tab-btn" id="tab-keys" onclick="switchTab('keys')">⌨️ Raccourcis</button>
+</div>
+<!-- Gameplay tab -->
+<div id="tab-game-content">
 <div class="row"><label>Vitesse</label><input type="range" id="sSpd" min="10" max="120" value="50"><span class="val" id="sSpdV">50</span></div>
 <div class="row"><label>Sensibilité</label><input type="range" id="sSens" min="1" max="10" value="3"><span class="val" id="sSensV">3</span></div>
 <div class="row"><label>Vitesse tactile</label><input type="range" id="sTouch" min="10" max="100" value="40"><span class="val" id="sTouchV">40</span></div>
 <div class="row"><label>Sensibilité tactile</label><input type="range" id="sTouchSens" min="1" max="10" value="3"><span class="val" id="sTouchSensV">3</span></div>
 <div class="row"><label>Distance</label><input type="range" id="sFog" min="20" max="200" value="100"><span class="val" id="sFogV">100</span></div>
 <div class="row"><label>Hauteur max</label><input type="range" id="sH" min="2" max="20" value="8"><span class="val" id="sHV">8</span></div>
+</div>
+<!-- Audio tab -->
+<div id="tab-audio-content" style="display:none">
+<div class="row"><label>🔊 Volume général</label><input type="range" id="sVol" min="0" max="100" value="70"><span class="val" id="sVolV">70%</span></div>
+<div class="row"><label>🎵 Musique de fond</label><input type="range" id="sMus" min="0" max="100" value="50"><span class="val" id="sMusV">50%</span></div>
+<div class="row"><label>💥 Effets sonores</label><input type="range" id="sSfx" min="0" max="100" value="80"><span class="val" id="sSfxV">80%</span></div>
+<div class="row"><label>💬 Dialogues</label><input type="range" id="sDlg" min="0" max="100" value="90"><span class="val" id="sDlgV">90%</span></div>
+<div class="row"><label>🌿 Ambiance</label><input type="range" id="sAmb" min="0" max="100" value="60"><span class="val" id="sAmbV">60%</span></div>
+<div style="margin-top:8px;text-align:center">
+<button class="btn" id="btn-test-sfx" style="background:#333;padding:5px 14px;font-size:11px;margin:2px">🔊 Test SFX</button>
+<button class="btn" id="btn-test-mus" style="background:#333;padding:5px 14px;font-size:11px;margin:2px">🎵 Test Musique</button>
+<button class="btn" id="btn-test-dlg" style="background:#333;padding:5px 14px;font-size:11px;margin:2px">💬 Test Dialogue</button>
+</div>
+<div id="audio-status" style="text-align:center;font-size:9px;color:#555;margin-top:6px">Audio prêt</div>
+</div>
+<!-- Keys tab -->
+<div id="tab-keys-content" style="display:none">
+<div class="keys"><h3>⌨️ Clavier</h3>
+<div><kbd>WASD</kbd> Déplacement</div>
+<div><kbd>Espace</kbd> Monter · <kbd>Shift</kbd> Descendre</div>
+<div><kbd>Souris</kbd> Regarder</div>
+<div><kbd>1-9</kbd> Biomes 1-9 · <kbd>Numpad</kbd> Biomes 10-16</div>
+<div><kbd>ESC</kbd> Paramètres / Libérer souris</div></div>
+<div class="keys" style="margin-top:8px"><h3>📱 Tactile</h3>
+<div>Joystick gauche : se déplacer</div>
+<div>Joystick droit : regarder</div>
+<div>⬆️⬇️ Boutons : monter / descendre</div></div>
+</div>
 <button class="btn" id="sClose">✕ Fermer</button>
-<div class="keys"><h3>⌨️ Raccourcis</h3>
-<div><kbd>WASD</kbd> Déplacement · <kbd>Espace/Shift</kbd> Haut/Bas</div>
-<div><kbd>1-9</kbd> Biomes 1-9 · <kbd>Numpad</kbd> Biomes 10-16</div></div>
 </div>
 </div>
 <!-- Inventory -->
@@ -447,6 +482,159 @@ document.getElementById('sTouch').oninput=e=>{touchSpd=+e.target.value;document.
 document.getElementById('sTouchSens').oninput=e=>{touchSens=+e.target.value;document.getElementById('sTouchSensV').textContent=touchSens};
 document.getElementById('sFog').oninput=function(e){var v=+e.target.value;document.getElementById('sFogV').textContent=v;if(scene.fog)scene.fog.density=80/v*.01};
 document.getElementById('sH').oninput=function(e){maxH=+e.target.value;document.getElementById('sHV').textContent=maxH;switchBiome(biomeIndex)};
+
+// ============ TABS ============
+function switchTab(t){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('tab-'+t).classList.add('sel');
+  document.getElementById('tab-game-content').style.display=t==='game'?'block':'none';
+  document.getElementById('tab-audio-content').style.display=t==='audio'?'block':'none';
+  document.getElementById('tab-keys-content').style.display=t==='keys'?'block':'none';
+}
+window.switchTab=switchTab;
+
+// ============ AUDIO ENGINE ============
+var audioCtx=null, masterGain=null, musGain=null, sfxGain=null, dlgGain=null, ambGain=null;
+var musicNodes=[], ambNodes=[], musicInterval=null, ambInterval=null;
+
+function initAudio(){
+  if(audioCtx)return;
+  audioCtx=new (window.AudioContext||window.webkitAudioContext)();
+  masterGain=audioCtx.createGain();
+  masterGain.gain.value=.7;
+  masterGain.connect(audioCtx.destination);
+
+  musGain=audioCtx.createGain(); musGain.gain.value=.5; musGain.connect(masterGain);
+  sfxGain=audioCtx.createGain(); sfxGain.gain.value=.8; sfxGain.connect(masterGain);
+  dlgGain=audioCtx.createGain(); dlgGain.gain.value=.9; dlgGain.connect(masterGain);
+  ambGain=audioCtx.createGain(); ambGain.gain.value=.6; ambGain.connect(masterGain);
+
+  startMusic();
+  startAmbience();
+}
+
+function setVolume(type,val){
+  if(!audioCtx)return;
+  var v=val/100;
+  if(type==='master')masterGain.gain.value=v;
+  if(type==='music')musGain.gain.value=v;
+  if(type==='sfx')sfxGain.gain.value=v;
+  if(type==='dialogue')dlgGain.gain.value=v;
+  if(type==='ambience')ambGain.gain.value=v;
+}
+
+// Procedural music: arpeggios on pentatonic scale
+var musicNotes=[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25];
+var musicStep=0;
+function startMusic(){
+  if(!audioCtx)return;
+  musicInterval=setInterval(function(){
+    if(!audioCtx||musGain.gain.value<.01)return;
+    var osc=audioCtx.createOscillator();
+    var env=audioCtx.createGain();
+    osc.type='sine';
+    var note=musicNotes[musicStep%musicNotes.length];
+    osc.frequency.value=note;
+    env.gain.setValueAtTime(0,audioCtx.currentTime);
+    env.gain.linearRampToValueAtTime(.15,audioCtx.currentTime+.05);
+    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.8);
+    osc.connect(env); env.connect(musGain);
+    osc.start(); osc.stop(audioCtx.currentTime+.8);
+    musicStep++;
+  },350);
+}
+
+// Procedural ambience: wind-like noise filtered
+function startAmbience(){
+  if(!audioCtx)return;
+  function playWind(){
+    if(!audioCtx||ambGain.gain.value<.01)return;
+    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate);
+    var data=buf.getChannelData(0);
+    for(var i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.3;
+    var src=audioCtx.createBufferSource();
+    src.buffer=buf;
+    var filter=audioCtx.createBiquadFilter();
+    filter.type='lowpass'; filter.frequency.value=400+Math.random()*200;
+    var env=audioCtx.createGain();
+    env.gain.setValueAtTime(0,audioCtx.currentTime);
+    env.gain.linearRampToValueAtTime(.08,audioCtx.currentTime+.5);
+    env.gain.linearRampToValueAtTime(0,audioCtx.currentTime+2);
+    src.connect(filter); filter.connect(env); env.connect(ambGain);
+    src.start(); src.stop(audioCtx.currentTime+2);
+  }
+  ambInterval=setInterval(playWind,2500);
+  playWind();
+}
+
+// SFX: procedural sounds
+function playSFX(type){
+  if(!audioCtx)initAudio();
+  if(!audioCtx)return;
+  var osc=audioCtx.createOscillator();
+  var env=audioCtx.createGain();
+  if(type==='step'){
+    osc.type='square'; osc.frequency.value=100+Math.random()*50;
+    env.gain.setValueAtTime(.1,audioCtx.currentTime);
+    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
+    osc.connect(env); env.connect(sfxGain);
+    osc.start(); osc.stop(audioCtx.currentTime+.1);
+  } else if(type==='jump'){
+    osc.type='sine'; osc.frequency.value=200;
+    osc.frequency.linearRampToValueAtTime(600,audioCtx.currentTime+.15);
+    env.gain.setValueAtTime(.15,audioCtx.currentTime);
+    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
+    osc.connect(env); env.connect(sfxGain);
+    osc.start(); osc.stop(audioCtx.currentTime+.2);
+  } else if(type==='land'){
+    osc.type='triangle'; osc.frequency.value=80;
+    env.gain.setValueAtTime(.12,audioCtx.currentTime);
+    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.15);
+    osc.connect(env); env.connect(sfxGain);
+    osc.start(); osc.stop(audioCtx.currentTime+.15);
+  }
+}
+
+// Dialogue: simulated voice-like tones
+function playDialogue(text){
+  if(!audioCtx)initAudio();
+  if(!audioCtx)return;
+  var words=text.split(' ');
+  var t=0;
+  words.forEach(function(w){
+    setTimeout(function(){
+      var osc=audioCtx.createOscillator();
+      var env=audioCtx.createGain();
+      osc.type='sawtooth';
+      var base=120+Math.random()*80;
+      osc.frequency.setValueAtTime(base,audioCtx.currentTime);
+      osc.frequency.linearRampToValueAtTime(base*(.8+Math.random()*.4),audioCtx.currentTime+.1);
+      env.gain.setValueAtTime(0,audioCtx.currentTime);
+      env.gain.linearRampToValueAtTime(.06,audioCtx.currentTime+.02);
+      env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.12);
+      osc.connect(env); env.connect(dlgGain);
+      osc.start(); osc.stop(audioCtx.currentTime+.12);
+    },t);
+    t+=120+w.length*30;
+  });
+}
+
+// Audio sliders
+document.getElementById('sVol').oninput=e=>{setVolume('master',+e.target.value);document.getElementById('sVolV').textContent=e.target.value+'%'};
+document.getElementById('sMus').oninput=e=>{setVolume('music',+e.target.value);document.getElementById('sMusV').textContent=e.target.value+'%'};
+document.getElementById('sSfx').oninput=e=>{setVolume('sfx',+e.target.value);document.getElementById('sSfxV').textContent=e.target.value+'%'};
+document.getElementById('sDlg').oninput=e=>{setVolume('dialogue',+e.target.value);document.getElementById('sDlgV').textContent=e.target.value+'%'};
+document.getElementById('sAmb').oninput=e=>{setVolume('ambience',+e.target.value);document.getElementById('sAmbV').textContent=e.target.value+'%'};
+
+// Test buttons
+document.getElementById('btn-test-sfx').onclick=function(){initAudio();playSFX('jump');document.getElementById('audio-status').textContent='🔊 SFX joué'};
+document.getElementById('btn-test-mus').onclick=function(){initAudio();document.getElementById('audio-status').textContent='🎵 Musique en cours...'};
+document.getElementById('btn-test-dlg').onclick=function(){initAudio();playDialogue('Bienvenue dans le Royaume des Legendes');document.getElementById('audio-status').textContent='💬 Dialogue joué'};
+
+// Init audio on first interaction
+document.addEventListener('click',function(){if(!audioCtx)initAudio()},{once:true});
+document.addEventListener('touchstart',function(){if(!audioCtx)initAudio()},{once:true});
+
 window.addEventListener('resize',function(){
   camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
