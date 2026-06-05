@@ -493,24 +493,50 @@ function switchTab(t){
 }
 window.switchTab=switchTab;
 
-// ============ AUDIO ENGINE ============
+// ============ MEDIEVAL AUDIO ENGINE ============
 var audioCtx=null, masterGain=null, musGain=null, sfxGain=null, dlgGain=null, ambGain=null;
-var musicNodes=[], ambNodes=[], musicInterval=null, ambInterval=null;
+var musicInterval=null, ambInterval=null, stepInterval=null;
+var isPlaying=false;
+
+var MEDIEVAL_NOTES={
+  // Pentatonic minor (medieval vibe)
+  penta:[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25],
+  // D Dorian (medieval mode)
+  dorian:[293.66,329.63,349.23,392.00,440.00,493.88,523.25,587.33],
+  // G Mixolydian
+  mixolydian:[392.00,440.00,493.88,523.25,587.33,659.25,698.46,783.99],
+  // A Aeolian (minor)
+  aeolian:[440.00,493.88,523.25,587.33,659.25,698.46,783.99,880.00]
+};
+var CHORD_PROGRESSIONS=[
+  [0,3,4,3], // i-iv-v-iv
+  [0,4,5,3], // i-v-iv-iv
+  [0,2,4,0], // i-iii-v-i
+  [0,4,3,5]  // i-v-iv-vi
+];
+var currentChord=0, currentNote=0, currentProgression=0;
 
 function initAudio(){
   if(audioCtx)return;
   audioCtx=new (window.AudioContext||window.webkitAudioContext)();
-  masterGain=audioCtx.createGain();
-  masterGain.gain.value=.7;
-  masterGain.connect(audioCtx.destination);
+  // Compressor for nicer sound
+  var comp=audioCtx.createDynamicsCompressor();
+  comp.threshold.value=-24; comp.knee.value=30; comp.ratio.value=12;
+  comp.attack.value=.003; comp.release.value=.25;
+  comp.connect(audioCtx.destination);
+
+  masterGain=audioCtx.createGain(); masterGain.gain.value=.7;
+  masterGain.connect(comp);
 
   musGain=audioCtx.createGain(); musGain.gain.value=.5; musGain.connect(masterGain);
   sfxGain=audioCtx.createGain(); sfxGain.gain.value=.8; sfxGain.connect(masterGain);
   dlgGain=audioCtx.createGain(); dlgGain.gain.value=.9; dlgGain.connect(masterGain);
   ambGain=audioCtx.createGain(); ambGain.gain.value=.6; ambGain.connect(masterGain);
 
-  startMusic();
-  startAmbience();
+  startMedievalMusic();
+  startMedievalAmbience();
+  startFootsteps();
+  isPlaying=true;
 }
 
 function setVolume(type,val){
@@ -523,115 +549,283 @@ function setVolume(type,val){
   if(type==='ambience')ambGain.gain.value=v;
 }
 
-// Procedural music: arpeggios on pentatonic scale
-var musicNotes=[261.63,293.66,329.63,392.00,440.00,523.25,587.33,659.25];
-var musicStep=0;
-function startMusic(){
-  if(!audioCtx)return;
-  musicInterval=setInterval(function(){
-    if(!audioCtx||musGain.gain.value<.01)return;
-    var osc=audioCtx.createOscillator();
-    var env=audioCtx.createGain();
-    osc.type='sine';
-    var note=musicNotes[musicStep%musicNotes.length];
-    osc.frequency.value=note;
-    env.gain.setValueAtTime(0,audioCtx.currentTime);
-    env.gain.linearRampToValueAtTime(.15,audioCtx.currentTime+.05);
-    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.8);
-    osc.connect(env); env.connect(musGain);
-    osc.start(); osc.stop(audioCtx.currentTime+.8);
-    musicStep++;
-  },350);
+// ============ MEDIEVAL MUSIC ============
+function playChordNote(freq,vol,duration,delay){
+  if(!audioCtx||musGain.gain.value<.01)return;
+  var t=audioCtx.currentTime+(delay||0);
+  // Main tone (lute-like)
+  var osc1=audioCtx.createOscillator();
+  osc1.type='triangle'; osc1.frequency.value=freq;
+  var env1=audioCtx.createGain();
+  env1.gain.setValueAtTime(0,t);
+  env1.gain.linearRampToValueAtTime(vol,t+.02);
+  osc1.connect(env1); env1.connect(musGain);
+  osc1.start(t); osc1.stop(t+duration);
+
+  // Harmonic (octave up, softer)
+  var osc2=audioCtx.createOscillator();
+  osc2.type='sine'; osc2.frequency.value=freq*2;
+  var env2=audioCtx.createGain();
+  env2.gain.setValueAtTime(0,t);
+  env2.gain.linearRampToValueAtTime(vol*.3,t+.01);
+  osc2.connect(env2); env2.connect(musGain);
+  osc2.start(t); osc2.stop(t+duration*.7);
+
+  // Dissonant overtone (gives medieval feel)
+  var osc3=audioCtx.createOscillator();
+  osc3.type='sine'; osc3.frequency.value=freq*1.5;
+  var env3=audioCtx.createGain();
+  env3.gain.setValueAtTime(0,t);
+  env3.gain.linearRampToValueAtTime(vol*.15,t+.03);
+  osc3.connect(env3); env3.connect(musGain);
+  osc3.start(t); osc3.stop(t+duration*.5);
 }
 
-// Procedural ambience: wind-like noise filtered
-function startAmbience(){
+function playMelodyNote(freq,vol,duration,delay){
+  if(!audioCtx||musGain.gain.value<.01)return;
+  var t=audioCtx.currentTime+(delay||0);
+  // Flute-like
+  var osc=audioCtx.createOscillator();
+  osc.type='sine'; osc.frequency.value=freq;
+  // Vibrato for medieval feel
+  var vibrato=audioCtx.createOscillator();
+  var vibGain=audioCtx.createGain();
+  vibrato.frequency.value=5; vibGain.gain.value=3;
+  vibrato.connect(vibGain); vibGain.connect(osc.frequency);
+  var env=audioCtx.createGain();
+  env.gain.setValueAtTime(0,t);
+  env.gain.linearRampToValueAtTime(vol,t+.05);
+  env.gain.setValueAtTime(vol,t+duration-.1);
+  env.gain.linearRampToValueAtTime(0,t+duration);
+  osc.connect(env); env.connect(musGain);
+  vibrato.start(t); osc.start(t);
+  osc.stop(t+duration); vibrato.stop(t+duration);
+}
+
+function playDrumHit(vol,delay){
+  if(!audioCtx||musGain.gain.value<.01)return;
+  var t=audioCtx.currentTime+(delay||0);
+  var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.15,audioCtx.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*.02));
+  var src=audioCtx.createBufferSource(); src.buffer=buf;
+  var filter=audioCtx.createBiquadFilter();
+  filter.type='bandpass'; filter.frequency.value=200; filter.Q.value=.5;
+  var env=audioCtx.createGain();
+  env.gain.setValueAtTime(vol,t);
+  env.gain.exponentialRampToValueAtTime(.001,t+.15);
+  src.connect(filter); filter.connect(env); env.connect(musGain);
+  src.start(t);
+}
+
+function startMedievalMusic(){
   if(!audioCtx)return;
+  var tempo=120; // BPM
+  var beatLen=60/tempo;
+  var barLen=beatLen*4;
+  currentProgression=Math.floor(Math.random()*CHORD_PROGRESSIONS.length);
+  var prog=CHORD_PROGRESSIONS[currentProgression];
+  currentChord=0; currentNote=0;
+  var notePatterns=[
+    [0,.5,1,1.5,2,3],
+    [0,1,2,2.5,3,3.5],
+    [0,.5,1.5,2,3,3.5],
+    [0,1,1.5,2.5,3]
+  ];
+  var melodyNoteIdx=0;
+
+  musicInterval=setInterval(function(){
+    if(!audioCtx||musGain.gain.value<.01)return;
+    var scale=MEDIEVAL_NOTES.dorian;
+    var chord=prog[currentChord%prog.length];
+    var root=scale[chord%scale.length];
+    var third=scale[(chord+2)%scale.length];
+    var fifth=scale[(chord+4)%scale.length];
+    var dur=barLen*1.8;
+    // Play chord (arpeggiated lute style)
+    playChordNote(root,.4,dur*.8,0);
+    playChordNote(third,.3,dur*.7,beatLen*.5);
+    playChordNote(root,.35,dur*.6,beatLen);
+    playChordNote(fifth,.25,dur*.6,beatLen*1.5);
+    playChordNote(root,.3,dur*.5,beatLen*2);
+    playChordNote(third,.25,dur*.4,beatLen*2.5);
+    playChordNote(root,.35,dur*.8,beatLen*3);
+    // Melody (flute-like)
+    var pat=notePatterns[melodyNoteIdx%notePatterns.length];
+    melodyNoteIdx++;
+    pat.forEach(function(bn){
+      var idx=Math.floor(Math.random()*scale.length);
+      var n=scale[idx]*2; // octave up
+      playMelodyNote(n,.12,beatLen*.6,bn*beatLen);
+    });
+    // Drum
+    playDrumHit(.08,0);
+    playDrumHit(.05,beatLen*2);
+    // Advance
+    currentChord++;
+    if(currentChord>=prog.length){
+      currentChord=0;
+      currentProgression=Math.floor(Math.random()*CHORD_PROGRESSIONS.length);
+      prog=CHORD_PROGRESSIONS[currentProgression];
+      // Switch scale occasionally
+      var scales=['dorian','penta','mixolydian','aeolian'];
+      var newScale=scales[Math.floor(Math.random()*scales.length)];
+      scale=MEDIEVAL_NOTES[newScale];
+    }
+  },barLen*4*1000);
+}
+
+// ============ MEDIEVAL AMBIENCE ============
+function startMedievalAmbience(){
+  if(!audioCtx)return;
+  // Wind
   function playWind(){
     if(!audioCtx||ambGain.gain.value<.01)return;
-    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*2,audioCtx.sampleRate);
-    var data=buf.getChannelData(0);
-    for(var i=0;i<data.length;i++)data[i]=(Math.random()*2-1)*.3;
-    var src=audioCtx.createBufferSource();
-    src.buffer=buf;
-    var filter=audioCtx.createBiquadFilter();
-    filter.type='lowpass'; filter.frequency.value=400+Math.random()*200;
+    var t=audioCtx.currentTime;
+    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*3,audioCtx.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*.2;
+    var src=audioCtx.createBufferSource(); src.buffer=buf;
+    var f=audioCtx.createBiquadFilter();
+    f.type='lowpass'; f.frequency.value=300+Math.random()*300;
     var env=audioCtx.createGain();
-    env.gain.setValueAtTime(0,audioCtx.currentTime);
-    env.gain.linearRampToValueAtTime(.08,audioCtx.currentTime+.5);
-    env.gain.linearRampToValueAtTime(0,audioCtx.currentTime+2);
-    src.connect(filter); filter.connect(env); env.connect(ambGain);
-    src.start(); src.stop(audioCtx.currentTime+2);
+    env.gain.setValueAtTime(0,t);
+    env.gain.linearRampToValueAtTime(.06,t+1);
+    env.gain.linearRampToValueAtTime(0,t+3);
+    src.connect(f); f.connect(env); env.connect(ambGain);
+    src.start(t); src.stop(t+3);
   }
-  ambInterval=setInterval(playWind,2500);
+  // Bird-like chirps
+  function playBird(){
+    if(!audioCtx||ambGain.gain.value<.01)return;
+    var t=audioCtx.currentTime;
+    for(var i=0;i<3;i++){
+      var osc=audioCtx.createOscillator();
+      var env=audioCtx.createGain();
+      var base=2000+Math.random()*1500;
+      osc.type='sine';
+      osc.frequency.setValueAtTime(base,t+i*.3);
+      osc.frequency.linearRampToValueAtTime(base*.7,t+i*.3+.1);
+      env.gain.setValueAtTime(0,t+i*.3);
+      env.gain.linearRampToValueAtTime(.03,t+i*.3+.02);
+      env.gain.exponentialRampToValueAtTime(.001,t+i*.3+.15);
+      osc.connect(env); env.connect(ambGain);
+      osc.start(t+i*.3); osc.stop(t+i*.3+.15);
+    }
+  }
+  ambInterval=setInterval(function(){
+    playWind();
+    if(Math.random()<.3)playBird();
+  },3000);
   playWind();
 }
 
-// SFX: procedural sounds
+// ============ FOOTSTEPS ============
+function playFootstep(){
+  if(!audioCtx||sfxGain.gain.value<.01)return;
+  var t=audioCtx.currentTime;
+  var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.12,audioCtx.sampleRate);
+  var d=buf.getChannelData(0);
+  for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*.015));
+  var src=audioCtx.createBufferSource(); src.buffer=buf;
+  var f=audioCtx.createBiquadFilter();
+  f.type='lowpass'; f.frequency.value=600+Math.random()*400;
+  var env=audioCtx.createGain();
+  env.gain.setValueAtTime(.15*Math.random()*.5+.08,t);
+  env.gain.exponentialRampToValueAtTime(.001,t+.12);
+  src.connect(f); f.connect(env); env.connect(sfxGain);
+  src.start(t);
+}
+
+function startFootsteps(){
+  stepInterval=setInterval(function(){
+    // Only play footsteps when moving (check keys or touch)
+    var moving=false;
+    if(keys['KeyW']||keys['KeyA']||keys['KeyS']||keys['KeyD'])moving=true;
+    if(isTouch){
+      if(Math.abs(moveJoy.getDX())>.05||Math.abs(moveJoy.getDY())>.05)moving=true;
+    }
+    if(moving)playFootstep();
+  },400);
+}
+
+// ============ SFX ============
 function playSFX(type){
   if(!audioCtx)initAudio();
   if(!audioCtx)return;
-  var osc=audioCtx.createOscillator();
-  var env=audioCtx.createGain();
-  if(type==='step'){
-    osc.type='square'; osc.frequency.value=100+Math.random()*50;
-    env.gain.setValueAtTime(.1,audioCtx.currentTime);
-    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
+  var t=audioCtx.currentTime;
+  if(type==='jump'){
+    var osc=audioCtx.createOscillator(), env=audioCtx.createGain();
+    osc.type='sine'; osc.frequency.setValueAtTime(200,t);
+    osc.frequency.linearRampToValueAtTime(600,t+.15);
+    env.gain.setValueAtTime(.15,t);
+    env.gain.exponentialRampToValueAtTime(.001,t+.2);
     osc.connect(env); env.connect(sfxGain);
-    osc.start(); osc.stop(audioCtx.currentTime+.1);
-  } else if(type==='jump'){
-    osc.type='sine'; osc.frequency.value=200;
-    osc.frequency.linearRampToValueAtTime(600,audioCtx.currentTime+.15);
-    env.gain.setValueAtTime(.15,audioCtx.currentTime);
-    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.2);
+    osc.start(); osc.stop(t+.2);
+  } else if(type==='swing'){
+    var buf=audioCtx.createBuffer(1,audioCtx.sampleRate*.3,audioCtx.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<d.length;i++)d[i]=(Math.random()*2-1)*Math.exp(-i/(audioCtx.sampleRate*.08));
+    var src=audioCtx.createBufferSource(); src.buffer=buf;
+    var f=audioCtx.createBiquadFilter(); f.type='highpass'; f.frequency.value=800;
+    var env=audioCtx.createGain();
+    env.gain.setValueAtTime(.2,t);
+    env.gain.exponentialRampToValueAtTime(.001,t+.3);
+    src.connect(f); f.connect(env); env.connect(sfxGain);
+    src.start(t);
+  } else if(type==='coin'){
+    var osc=audioCtx.createOscillator(), env=audioCtx.createGain();
+    osc.type='sine'; osc.frequency.value=1200;
+    env.gain.setValueAtTime(.1,t);
+    env.gain.exponentialRampToValueAtTime(.001,t+.15);
     osc.connect(env); env.connect(sfxGain);
-    osc.start(); osc.stop(audioCtx.currentTime+.2);
-  } else if(type==='land'){
-    osc.type='triangle'; osc.frequency.value=80;
-    env.gain.setValueAtTime(.12,audioCtx.currentTime);
-    env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.15);
-    osc.connect(env); env.connect(sfxGain);
-    osc.start(); osc.stop(audioCtx.currentTime+.15);
+    osc.start(); osc.stop(t+.15);
+    // Second harmonic
+    setTimeout(function(){
+      var osc2=audioCtx.createOscillator(), env2=audioCtx.createGain();
+      osc2.type='sine'; osc2.frequency.value=1800;
+      env2.gain.setValueAtTime(.08,audioCtx.currentTime);
+      env2.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.1);
+      osc2.connect(env2); env2.connect(sfxGain);
+      osc2.start(); osc2.stop(audioCtx.currentTime+.1);
+    },80);
   }
 }
 
-// Dialogue: simulated voice-like tones
+// ============ DIALOGUE ============
 function playDialogue(text){
   if(!audioCtx)initAudio();
   if(!audioCtx)return;
   var words=text.split(' ');
-  var t=0;
+  var t=audioCtx.currentTime;
+  var elapsed=0;
   words.forEach(function(w){
-    setTimeout(function(){
-      var osc=audioCtx.createOscillator();
-      var env=audioCtx.createGain();
-      osc.type='sawtooth';
-      var base=120+Math.random()*80;
-      osc.frequency.setValueAtTime(base,audioCtx.currentTime);
-      osc.frequency.linearRampToValueAtTime(base*(.8+Math.random()*.4),audioCtx.currentTime+.1);
-      env.gain.setValueAtTime(0,audioCtx.currentTime);
-      env.gain.linearRampToValueAtTime(.06,audioCtx.currentTime+.02);
-      env.gain.exponentialRampToValueAtTime(.001,audioCtx.currentTime+.12);
-      osc.connect(env); env.connect(dlgGain);
-      osc.start(); osc.stop(audioCtx.currentTime+.12);
-    },t);
-    t+=120+w.length*30;
+    var dur=.08+w.length*.02;
+    var osc=audioCtx.createOscillator(), env=audioCtx.createGain();
+    osc.type='sawtooth';
+    var base=100+Math.random()*100;
+    osc.frequency.setValueAtTime(base,t+elapsed);
+    osc.frequency.linearRampToValueAtTime(base*(.7+Math.random()*.6),t+elapsed+dur);
+    env.gain.setValueAtTime(0,t+elapsed);
+    env.gain.linearRampToValueAtTime(.05,t+elapsed+.01);
+    env.gain.exponentialRampToValueAtTime(.001,t+elapsed+dur);
+    osc.connect(env); env.connect(dlgGain);
+    osc.start(t+elapsed); osc.stop(t+elapsed+dur);
+    elapsed+=dur+0.03;
   });
 }
 
-// Audio sliders
-document.getElementById('sVol').oninput=e=>{setVolume('master',+e.target.value);document.getElementById('sVolV').textContent=e.target.value+'%'};
-document.getElementById('sMus').oninput=e=>{setVolume('music',+e.target.value);document.getElementById('sMusV').textContent=e.target.value+'%'};
-document.getElementById('sSfx').oninput=e=>{setVolume('sfx',+e.target.value);document.getElementById('sSfxV').textContent=e.target.value+'%'};
-document.getElementById('sDlg').oninput=e=>{setVolume('dialogue',+e.target.value);document.getElementById('sDlgV').textContent=e.target.value+'%'};
-document.getElementById('sAmb').oninput=e=>{setVolume('ambience',+e.target.value);document.getElementById('sAmbV').textContent=e.target.value+'%'};
+// ============ SLIDERS ============
+document.getElementById('sVol').oninput=function(e){setVolume('master',+e.target.value);document.getElementById('sVolV').textContent=e.target.value+'%'};
+document.getElementById('sMus').oninput=function(e){setVolume('music',+e.target.value);document.getElementById('sMusV').textContent=e.target.value+'%'};
+document.getElementById('sSfx').oninput=function(e){setVolume('sfx',+e.target.value);document.getElementById('sSfxV').textContent=e.target.value+'%'};
+document.getElementById('sDlg').oninput=function(e){setVolume('dialogue',+e.target.value);document.getElementById('sDlgV').textContent=e.target.value+'%'};
+document.getElementById('sAmb').oninput=function(e){setVolume('ambience',+e.target.value);document.getElementById('sAmbV').textContent=e.target.value+'%'};
 
-// Test buttons
-document.getElementById('btn-test-sfx').onclick=function(){initAudio();playSFX('jump');document.getElementById('audio-status').textContent='🔊 SFX joué'};
-document.getElementById('btn-test-mus').onclick=function(){initAudio();document.getElementById('audio-status').textContent='🎵 Musique en cours...'};
-document.getElementById('btn-test-dlg').onclick=function(){initAudio();playDialogue('Bienvenue dans le Royaume des Legendes');document.getElementById('audio-status').textContent='💬 Dialogue joué'};
+document.getElementById('btn-test-sfx').onclick=function(){initAudio();playSFX('swing');document.getElementById('audio-status').textContent='🔊 SFX joué'};
+document.getElementById('btn-test-mus').onclick=function(){initAudio();document.getElementById('audio-status').textContent='🎵 Musique médiévale en cours...'};
+document.getElementById('btn-test-dlg').onclick=function(){initAudio();playDialogue('Bienvenue dans le Royaume des Legendes brave aventurier');document.getElementById('audio-status').textContent='💬 Dialogue joué'};
 
-// Init audio on first interaction
 document.addEventListener('click',function(){if(!audioCtx)initAudio()},{once:true});
 document.addEventListener('touchstart',function(){if(!audioCtx)initAudio()},{once:true});
 
