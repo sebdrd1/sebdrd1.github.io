@@ -474,14 +474,14 @@ var clock=new THREE.Clock();
   if(isTouch){
     var mdx=moveJoy.getDX(), mdy=moveJoy.getDY();
     if(Math.abs(mdx)>.05||Math.abs(mdy)>.05){
-      camera.position.addScaledVector(fwd,-mdy*spd);
+      camera.position.addScaledVector(fwd,mdy*spd);
       camera.position.addScaledVector(right,mdx*spd);
     }
     // Touch: look joystick
     var ldx=lookJoy.getDX(), ldy=lookJoy.getDY();
     if(Math.abs(ldx)>.05||Math.abs(ldy)>.05){
-      yaw+=ldx*.04;
-      pitch-=ldy*.04;
+      yaw-=ldx*.04;
+      pitch+=ldy*.04;
       pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
     }
   }
