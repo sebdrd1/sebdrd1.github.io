@@ -1,0 +1,5 @@
+[config]
+
+app_name="Realm of Legends"
+run/main_scene="res://Main.tscn"
+config/version=4.6

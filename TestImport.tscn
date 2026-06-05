@@ -1,0 +1,4 @@
+[gd_scene load_steps=3 format=3 uid="UID"]
+[node name="TestImport" type="Node"]
+script = ExtResource( 1 )
+[ext_resource type="Script" path="res://test_import.gd" id=1]
