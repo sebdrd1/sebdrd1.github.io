@@ -8,47 +8,66 @@
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{background:#000;color:#eee;font-family:'Segoe UI',sans-serif;overflow:hidden;touch-action:none}
 canvas{display:block;position:fixed;top:0;left:0;z-index:1}
+/* Loading */
 #loading{position:fixed;inset:0;background:linear-gradient(135deg,#0a0a1a,#1a0a2e);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .6s}
 #loading.done{opacity:0;pointer-events:none}
-#loading h1{font-size:2.2em;background:linear-gradient(135deg,#e94560,#ff6b6b,#feca57);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
-#loading p{color:#888;margin-bottom:16px;font-size:13px}
-#loading .bar{width:240px;height:4px;background:#222;border-radius:2px;overflow:hidden}
+#loading h1{font-size:2em;background:linear-gradient(135deg,#e94560,#feca57);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+#loading p{color:#888;margin-bottom:14px;font-size:12px}
+#loading .bar{width:220px;height:3px;background:#222;border-radius:2px;overflow:hidden}
 #loading .bar .fill{height:100%;width:0%;background:linear-gradient(90deg,#e94560,#feca57);border-radius:2px;transition:width .3s}
-#load-status{color:#555;font-size:10px;margin-top:8px}
-#hud{position:fixed;top:8px;left:8px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:11px;line-height:1.6;pointer-events:none;z-index:20;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);display:none}
-#hud .title{color:#e94560;font-weight:700;font-size:13px;margin-bottom:2px}
-#hud kbd{background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:9px}
-#coords{color:#666;margin-top:2px;font-size:10px}
-#biome-tag{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:8px;font-size:13px;color:#feca57;z-index:20;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);display:none;font-weight:600}
-#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;pointer-events:none;z-index:15;display:none}
-#crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,.35)}
-#crosshair::before{width:1px;height:100%;left:50%;transform:translateX(-50%)}
-#crosshair::after{width:100%;height:1px;top:50%;transform:translateY(-50%)}
-#tip{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);padding:4px 10px;border-radius:6px;font-size:10px;color:#777;z-index:20;display:none;pointer-events:none}
-#menu{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);display:none;gap:2px;z-index:20;flex-wrap:wrap;justify-content:center;max-width:94vw;padding:4px 8px;background:rgba(0,0,0,.65);border-radius:8px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
-#menu button{background:rgba(255,255,255,.07);color:#ccc;border:none;padding:3px 7px;border-radius:4px;cursor:pointer;font-size:9px;transition:all .15s}
-#menu button:hover,#menu button.sel{background:#e94560;color:#fff}
-#settings{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(10px)}
-#settings .panel{background:linear-gradient(135deg,#111122,#1a1030);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px 24px;min-width:280px;max-width:92vw}
-#settings h2{color:#e94560;font-size:1.2em;margin-bottom:12px;text-align:center}
-#settings .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px}
-#settings .row label{color:#999}
-#settings .row input[type=range]{width:110px;accent-color:#e94560}
-#settings .row .val{color:#feca57;min-width:30px;text-align:right;font-weight:700}
-#settings .btn{display:block;margin:12px auto 0;background:#e94560;color:#fff;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px}
-#settings .btn:hover{background:#c0392b}
-#settings .keys{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
-#settings .keys h3{color:#666;font-size:10px;margin-bottom:5px}
-#settings .keys div{font-size:9px;color:#555;line-height:1.6}
-#settings .keys kbd{background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px;font-size:9px;color:#888}
-/* ===== TOUCH CONTROLS ===== */
+#load-status{color:#555;font-size:10px;margin-top:6px}
+/* HUD */
+#hud{position:fixed;top:6px;left:6px;background:rgba(0,0,0,.55);padding:6px 10px;border-radius:6px;font-size:10px;line-height:1.5;pointer-events:none;z-index:20;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.06);display:none}
+#hud .title{color:#e94560;font-weight:700;font-size:12px;margin-bottom:1px}
+#hud kbd{background:rgba(255,255,255,.08);padding:1px 3px;border-radius:2px;font-size:8px}
+#coords{color:#555;margin-top:1px;font-size:9px}
+#biome-tag{position:fixed;top:6px;right:6px;background:rgba(0,0,0,.55);padding:5px 10px;border-radius:6px;font-size:12px;color:#feca57;z-index:20;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.06);display:none;font-weight:600}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:12px;height:12px;pointer-events:none;z-index:15;display:none}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,.3)}
+#crosshair::before{width:1px;height:100%;left:50%}
+#crosshair::after{width:100%;height:1px;top:50%}
+#tip{position:fixed;bottom:52px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.5);padding:3px 8px;border-radius:4px;font-size:9px;color:#666;z-index:20;display:none;pointer-events:none}
+/* Menu bar */
+#menu{position:fixed;bottom:4px;left:50%;transform:translateX(-50%);display:none;gap:2px;z-index:20;flex-wrap:wrap;justify-content:center;max-width:96vw;padding:3px 6px;background:rgba(0,0,0,.6);border-radius:8px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.06)}
+#menu button{background:rgba(255,255,255,.06);color:#bbb;border:none;padding:3px 6px;border-radius:4px;cursor:pointer;font-size:9px;transition:all .15s}
+#menu button.sel{background:#e94560;color:#fff}
+#menu button.action{background:rgba(233,69,96,.2);color:#e94560;font-weight:600}
+/* Settings panel */
+#settings{position:fixed;inset:0;background:rgba(0,0,0,.85);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(8px)}
+#settings .panel{background:linear-gradient(135deg,#111122,#1a1030);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:18px 22px;min-width:260px;max-width:90vw}
+#settings h2{color:#e94560;font-size:1.1em;margin-bottom:10px;text-align:center}
+#settings .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;font-size:11px}
+#settings .row label{color:#888}
+#settings .row input[type=range]{width:100px;accent-color:#e94560}
+#settings .row .val{color:#feca57;min-width:28px;text-align:right;font-weight:700}
+#settings .btn{display:block;margin:10px auto 0;background:#e94560;color:#fff;border:none;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:12px}
+#settings .keys{margin-top:8px;padding-top:8px;border-top:1px solid rgba(255,255,255,.06)}
+#settings .keys h3{color:#555;font-size:9px;margin-bottom:4px}
+#settings .keys div{font-size:8px;color:#444;line-height:1.5}
+#settings .keys kbd{background:rgba(255,255,255,.06);padding:1px 3px;border-radius:2px;font-size:8px;color:#777}
+/* Inventory panel */
+#inventory{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(8px)}
+#inv-panel{background:linear-gradient(135deg,#111122,#1a1030);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:16px 20px;min-width:300px;max-width:92vw;max-height:80vh;overflow-y:auto}
+#inv-panel h2{color:#feca57;font-size:1.1em;margin-bottom:10px;text-align:center}
+#inv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(52px,1fr));gap:6px;margin-bottom:10px}
+.inv-slot{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:6px;padding:4px;text-align:center;min-height:56px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.inv-slot .icon{font-size:20px}
+.inv-slot .label{font-size:7px;color:#888;margin-top:2px}
+.inv-slot .count{font-size:8px;color:#feca57;font-weight:700}
+.inv-slot.empty{opacity:.3}
+#inv-close{display:block;margin:0 auto;background:#e94560;color:#fff;border:none;padding:6px 18px;border-radius:5px;cursor:pointer;font-size:12px}
+/* Touch controls */
 #touch-ctrl{position:fixed;inset:0;z-index:25;display:none;pointer-events:none}
-#joystick{position:absolute;left:20px;bottom:90px;width:100px;height:100px;background:rgba(255,255,255,.05);border-radius:50%;border:2px solid rgba(255,255,255,.1);pointer-events:auto;touch-action:none}
-#joy-knob{position:absolute;width:40px;height:40px;background:rgba(233,69,96,.45);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;border:2px solid rgba(233,69,96,.6)}
-#touch-btns{position:absolute;right:16px;bottom:90px;display:flex;flex-direction:column;gap:6px;pointer-events:auto}
-.tbtn{width:44px;height:44px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#ddd;font-size:16px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
-.tbtn.touching{background:rgba(233,69,96,.45)!important}
-#look-area{position:absolute;right:16px;bottom:200px;width:70px;height:70px;background:rgba(255,255,255,.03);border-radius:50%;border:1px solid rgba(255,255,255,.06);pointer-events:auto;touch-action:none}
+.joy-base{position:absolute;width:100px;height:100px;background:rgba(255,255,255,.04);border-radius:50%;border:2px solid rgba(255,255,255,.08);pointer-events:auto;touch-action:none}
+.joy-knob{position:absolute;width:38px;height:38px;border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none}
+#joy-move{left:16px;bottom:85px}
+#joy-move .joy-knob{background:rgba(233,69,96,.4);border:2px solid rgba(233,69,96,.55)}
+#joy-look{right:16px;bottom:85px}
+#joy-look .joy-knob{background:rgba(52,152,219,.4);border:2px solid rgba(52,152,219,.55)}
+.joy-label{position:absolute;bottom:-16px;left:50%;transform:translateX(-50%);font-size:8px;color:rgba(255,255,255,.2);white-space:nowrap}
+#touch-btns{position:absolute;right:16px;bottom:195px;display:flex;flex-direction:column;gap:5px;pointer-events:auto}
+.tbtn{width:42px;height:42px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#ccc;font-size:15px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tbtn.touching{background:rgba(233,69,96,.4)!important}
 @media(min-width:768px){#touch-ctrl{display:none!important}}
 </style>
 </head>
@@ -59,11 +78,12 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <div class="bar"><div class="fill" id="lf"></div></div>
 <div id="ls">Initialisation...</div>
 </div>
-<div id="hud"><div class="title">⚔️ Realm of Legends</div><div><kbd>WASD</kbd> Bouger</div><div><kbd>Espace</kbd> Monter <kbd>Shift</kbd> Descendre</div><div><kbd>Souris</kbd> Regarder</div><div><kbd>1-9</kbd> Biomes</div><div id="coords">X:0 Y:0 Z:0</div></div>
+<div id="hud"><div class="title">⚔️ Realm of Legends</div><div><kbd>WASD</kbd> Bouger</div><div><kbd>Espace</kbd> Monter <kbd>Shift</kbd> Descendre</div><div><kbd>Souris</kbd> Regarder</div><div id="coords">X:0 Y:0 Z:0</div></div>
 <div id="biome-tag">🌲 Forêt</div>
 <div id="crosshair"></div>
-<div id="tip">Cliquez pour capturer la souris · ESC pour les paramètres</div>
+<div id="tip">Cliquez pour capturer la souris</div>
 <div id="menu"></div>
+<!-- Settings -->
 <div id="settings">
 <div class="panel">
 <h2>⚙️ Paramètres</h2>
@@ -74,14 +94,21 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <button class="btn" id="sClose">✕ Fermer</button>
 <div class="keys"><h3>⌨️ Raccourcis</h3>
 <div><kbd>WASD</kbd> Déplacement · <kbd>Espace/Shift</kbd> Haut/Bas</div>
-<div><kbd>1-9</kbd> Biomes 1-9 · <kbd>Numpad</kbd> Biomes 10-16</div>
-<div><kbd>ESC</kbd> Paramètres / Libérer souris</div></div>
+<div><kbd>1-9</kbd> Biomes 1-9 · <kbd>Numpad</kbd> Biomes 10-16</div></div>
+</div>
+</div>
+<!-- Inventory -->
+<div id="inventory">
+<div id="inv-panel">
+<h2>🎒 Inventaire</h2>
+<div id="inv-grid"></div>
+<button id="inv-close">✕ Fermer</button>
 </div>
 </div>
 <!-- Touch controls -->
 <div id="touch-ctrl">
-<div id="joystick"><div id="joy-knob"></div></div>
-<div id="look-area"></div>
+<div id="joy-move" class="joy-base"><div class="joy-knob"></div><div class="joy-label">Déplacement</div></div>
+<div id="joy-look" class="joy-base"><div class="joy-knob"></div><div class="joy-label">Regarder</div></div>
 <div id="touch-btns">
 <div class="tbtn" id="btn-up">⬆</div>
 <div class="tbtn" id="btn-down">⬇</div>
@@ -92,7 +119,6 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 // ============ SETUP ============
 var LD=document.getElementById('loading'),LF=document.getElementById('lf'),LS=document.getElementById('ls');
 function loadPct(p,t){LF.style.width=p+'%';if(t)LS.textContent=t}
-
 var scene=new THREE.Scene();
 var camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,.1,500);
 var renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
@@ -189,12 +215,12 @@ function buildWorld(biomeIdx){
       }
       if(biomeIdx===7&&Math.random()<.025&&cnt<MAX_V){
         var cH=2+Math.floor(Math.random()*3);
-        var cColors=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6];
+        var cCol=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6];
         for(var cy=0;cy<cH&&cnt<MAX_V;cy++){
           dummy.position.set(x+.5,h+1+cy,z+.5);
           dummy.updateMatrix();
           vMesh.setMatrixAt(cnt,dummy.matrix);
-          vMesh.setColorAt(cnt,col.setHex(cColors[cy%5]));
+          vMesh.setColorAt(cnt,col.setHex(cCol[cy%5]));
           cnt++;
         }
       }
@@ -229,7 +255,7 @@ function switchBiome(i){
   biomeIndex=i;
   buildWorld(i);
   document.getElementById('biome-tag').textContent=BIOMES[i].n;
-  var btns=document.querySelectorAll('#menu button');
+  var btns=document.querySelectorAll('#menu button.biome');
   btns.forEach(function(b,idx){b.classList.toggle('sel',idx===i)});
 }
 
@@ -241,10 +267,59 @@ var menu=document.getElementById('menu');
 BIOMES.forEach(function(b,i){
   var btn=document.createElement('button');
   btn.textContent=b.n;
+  btn.className='biome';
   btn.onclick=function(){switchBiome(i)};
   if(i===0)btn.classList.add('sel');
   menu.appendChild(btn);
 });
+// Action buttons
+var btnSettings=document.createElement('button');
+btnSettings.textContent='⚙️';
+btnSettings.className='action';
+btnSettings.onclick=function(){settingsOpen=true;document.getElementById('settings').style.display='flex'};
+menu.appendChild(btnSettings);
+
+var btnInv=document.createElement('button');
+btnInv.textContent='🎒';
+btnInv.className='action';
+btnInv.onclick=function(){document.getElementById('inventory').style.display='flex'};
+menu.appendChild(btnInv);
+
+// ============ INVENTORY ============
+var INV_ITEMS=[
+{icon:'🗡️',name:'Épée',count:1},
+{icon:'🛡️',name:'Bouclier',count:1},
+{icon:'⛏️',name:'Pioche',count:1},
+{icon:'🪓',name:'Hache',count:1},
+{icon:'🧪',name:'Potion',count:5},
+{icon:'💎',name:'Émeraude',count:12},
+{icon:'🔷',name:'Saphir',count:8},
+{icon:'🔴',name:'Rubis',count:6},
+{icon:'💜',name:'Améthyste',count:4},
+{icon:'⭐',name:'Topaze',count:3},
+{icon:'🔶',name:'Diamant',count:1},
+{icon:'🪶',name:'Aile-Cape',count:2},
+{icon:'🐉',name:'Écaille',count:24},
+{icon:'🦷',name:'Griffe',count:8},
+{icon:'🪖',name:'Casque',count:1},
+{icon:'🛡️',name:'Plastron',count:1},
+{icon:'👢',name:'Bottes',count:1},
+{icon:'🦵',name:'Jambières',count:1}
+];
+var invGrid=document.getElementById('inv-grid');
+INV_ITEMS.forEach(function(item){
+  var slot=document.createElement('div');
+  slot.className='inv-slot';
+  slot.innerHTML='<div class="icon">'+item.icon+'</div><div class="label">'+item.name+'</div><div class="count">x'+item.count+'</div>';
+  invGrid.appendChild(slot);
+});
+// Fill empty slots
+for(var i=0;i<6;i++){
+  var slot=document.createElement('div');
+  slot.className='inv-slot empty';
+  invGrid.appendChild(slot);
+}
+document.getElementById('inv-close').onclick=function(){document.getElementById('inventory').style.display='none'};
 
 // ============ CONTROLS ============
 loadPct(60,'Configuration...');
@@ -273,39 +348,32 @@ document.addEventListener('keydown',function(e){
   if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].indexOf(e.code)>=0)e.preventDefault();
 });
 document.addEventListener('keyup',function(e){keys[e.code]=false});
-
 document.addEventListener('mousemove',function(e){
   if(!pointerLocked)return;
   yaw-=e.movementX*.001*mouseSens;
   pitch-=e.movementY*.001*mouseSens;
   pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
 });
-
 renderer.domElement.addEventListener('click',function(){
   if(!pointerLocked&&!settingsOpen){
     renderer.domElement.requestPointerLock();
     document.getElementById('tip').style.display='none';
   }
 });
-
 document.addEventListener('pointerlockchange',function(){
   pointerLocked=document.pointerLockElement===renderer.domElement;
 });
-
 document.addEventListener('keydown',function(e){
   var n=parseInt(e.key);
   if(n>=1&&n<=9)switchBiome(n-1);
   var np={Numpad0:9,Numpad1:10,Numpad2:11,Numpad3:12,Numpad4:13,Numpad5:14,Numpad6:15};
   if(np[e.code]!==undefined)switchBiome(np[e.code]);
 });
-
-// Settings UI
 document.getElementById('sClose').onclick=closeSettings;
 document.getElementById('sSpd').oninput=function(e){moveSpd=+e.target.value;document.getElementById('sSpdV').textContent=moveSpd};
 document.getElementById('sSens').oninput=function(e){mouseSens=+e.target.value;document.getElementById('sSensV').textContent=mouseSens};
 document.getElementById('sFog').oninput=function(e){var v=+e.target.value;document.getElementById('sFogV').textContent=v;if(scene.fog)scene.fog.density=80/v*.01};
 document.getElementById('sH').oninput=function(e){maxH=+e.target.value;document.getElementById('sHV').textContent=maxH;switchBiome(biomeIndex)};
-
 window.addEventListener('resize',function(){
   camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
@@ -313,94 +381,56 @@ window.addEventListener('resize',function(){
 });
 
 // ============ TOUCH CONTROLS ============
-var isTouchDevice=false;
-if('ontouchstart' in window||navigator.maxTouchPoints>0) isTouchDevice=true;
+var isTouch=('ontouchstart' in window||navigator.maxTouchPoints>0);
+if(isTouch) document.getElementById('touch-ctrl').style.display='block';
 
-if(isTouchDevice){
-  document.getElementById('touch-ctrl').style.display='block';
-  document.getElementById('tip').textContent='Joystick: bouger · Côté droit: regarder · Boutons: haut/bas';
-}
-
-// Joystick
-var joyEl=document.getElementById('joystick');
-var knobEl=document.getElementById('joy-knob');
-var joyId=null, joyCX=0, joyCY=0, joyDX=0, joyDY=0;
-
-joyEl.addEventListener('touchstart',function(e){
-  e.preventDefault();
-  joyId=e.changedTouches[0].identifier;
-  var r=joyEl.getBoundingClientRect();
-  joyCX=r.left+r.width/2;
-  joyCY=r.top+r.height/2;
-  updateJoy(e.changedTouches[0]);
-},{passive:false});
-
-joyEl.addEventListener('touchmove',function(e){
-  e.preventDefault();
-  for(var i=0;i<e.changedTouches.length;i++){
-    if(e.changedTouches[i].identifier===joyId){updateJoy(e.changedTouches[i]);break;}
+function setupJoy(elId,knobClass){
+  var base=document.getElementById(elId);
+  var knob=base.querySelector('.joy-knob');
+  var id=null, cX=0, cY=0, dx=0, dy=0;
+  function getCenter(){
+    var r=base.getBoundingClientRect();
+    return {x:r.left+r.width/2,y:r.top+r.height/2};
   }
-},{passive:false});
-
-function endJoy(e){
-  for(var i=0;i<e.changedTouches.length;i++){
-    if(e.changedTouches[i].identifier===joyId){
-      joyId=null;joyDX=0;joyDY=0;
-      knobEl.style.transform='translate(-50%,-50%)';
-      break;
+  base.addEventListener('touchstart',function(e){
+    e.preventDefault();
+    id=e.changedTouches[0].identifier;
+    var c=getCenter();cX=c.x;cY=c.y;
+    updateKnob(e.changedTouches[0]);
+  },{passive:false});
+  base.addEventListener('touchmove',function(e){
+    e.preventDefault();
+    for(var i=0;i<e.changedTouches.length;i++){
+      if(e.changedTouches[i].identifier===id){updateKnob(e.changedTouches[i]);break;}
+    }
+  },{passive:false});
+  function endTouch(e){
+    for(var i=0;i<e.changedTouches.length;i++){
+      if(e.changedTouches[i].identifier===id){
+        id=null;dx=0;dy=0;
+        knob.style.transform='translate(-50%,-50%)';
+        break;
+      }
     }
   }
-}
-joyEl.addEventListener('touchend',endJoy);
-joyEl.addEventListener('touchcancel',endJoy);
-
-function updateJoy(t){
-  var dx=t.clientX-joyCX, dy=t.clientY-joyCY;
-  var dist=Math.sqrt(dx*dx+dy*dy);
-  var maxR=30;
-  if(dist>maxR){dx=dx/dist*maxR;dy=dy/dist*maxR;}
-  joyDX=dx/maxR; joyDY=dy/maxR;
-  knobEl.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';
-}
-
-// Look area (right side drag)
-var lookEl=document.getElementById('look-area');
-var lookId=null, lookLastX=0, lookLastY=0;
-
-lookEl.addEventListener('touchstart',function(e){
-  e.preventDefault();
-  lookId=e.changedTouches[0].identifier;
-  lookLastX=e.changedTouches[0].clientX;
-  lookLastY=e.changedTouches[0].clientY;
-},{passive:false});
-
-lookEl.addEventListener('touchmove',function(e){
-  e.preventDefault();
-  for(var i=0;i<e.changedTouches.length;i++){
-    if(e.changedTouches[i].identifier===lookId){
-      var dx=e.changedTouches[i].clientX-lookLastX;
-      var dy=e.changedTouches[i].clientY-lookLastY;
-      yaw-=dx*.004;
-      pitch-=dy*.004;
-      pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
-      lookLastX=e.changedTouches[i].clientX;
-      lookLastY=e.changedTouches[i].clientY;
-      break;
-    }
+  base.addEventListener('touchend',endTouch);
+  base.addEventListener('touchcancel',endTouch);
+  function updateKnob(t){
+    var ddx=t.clientX-cX, ddy=t.clientY-cY;
+    var dist=Math.sqrt(ddx*ddx+ddy*ddy);
+    var maxR=30;
+    if(dist>maxR){ddx=ddx/dist*maxR;ddy=ddy/dist*maxR;}
+    dx=ddx/maxR;dy=ddy/maxR;
+    knob.style.transform='translate(calc(-50% + '+ddx+'px),calc(-50% + '+ddy+'px))';
   }
-},{passive:false});
+  return {getDX:function(){return dx},getDY:function(){return dy}};
+}
+var moveJoy=setupJoy('joy-move');
+var lookJoy=setupJoy('joy-look');
 
-lookEl.addEventListener('touchend',function(e){
-  for(var i=0;i<e.changedTouches.length;i++){
-    if(e.changedTouches[i].identifier===lookId){lookId=null;break;}
-  }
-});
-
-// Up/Down buttons
-var btnUp=document.getElementById('btn-up');
-var btnDown=document.getElementById('btn-down');
-
-function touchBtn(btn,code){
+// Touch buttons
+function touchBtn(btnId,code){
+  var btn=document.getElementById(btnId);
   btn.addEventListener('touchstart',function(e){
     e.preventDefault();keys[code]=true;btn.classList.add('touching');
   },{passive:false});
@@ -409,8 +439,8 @@ function touchBtn(btn,code){
   },{passive:false});
   btn.addEventListener('touchcancel',function(){keys[code]=false;btn.classList.remove('touching')});
 }
-touchBtn(btnUp,'Space');
-touchBtn(btnDown,'ShiftLeft');
+touchBtn('btn-up','Space');
+touchBtn('btn-down','ShiftLeft');
 
 // ============ LOOP ============
 loadPct(100,'Prêt !');
@@ -440,10 +470,20 @@ var clock=new THREE.Clock();
   if(keys['Space'])camera.position.y+=spd;
   if(keys['ShiftLeft']||keys['ShiftRight'])camera.position.y-=spd;
 
-  // Touch joystick
-  if(joyId!==null){
-    camera.position.addScaledVector(fwd,-joyDY*spd);
-    camera.position.addScaledVector(right,joyDX*spd);
+  // Touch: move joystick
+  if(isTouch){
+    var mdx=moveJoy.getDX(), mdy=moveJoy.getDY();
+    if(Math.abs(mdx)>.05||Math.abs(mdy)>.05){
+      camera.position.addScaledVector(fwd,-mdy*spd);
+      camera.position.addScaledVector(right,mdx*spd);
+    }
+    // Touch: look joystick
+    var ldx=lookJoy.getDX(), ldy=lookJoy.getDY();
+    if(Math.abs(ldx)>.05||Math.abs(ldy)>.05){
+      yaw+=ldx*.04;
+      pitch-=ldy*.04;
+      pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
+    }
   }
 
   camera.rotation.order='YXZ';
