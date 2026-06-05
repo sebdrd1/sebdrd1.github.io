@@ -2,46 +2,54 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 <title>Realm of Legends — Voxel Biome Explorer</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#000;color:#eee;font-family:'Segoe UI',sans-serif;overflow:hidden}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{background:#000;color:#eee;font-family:'Segoe UI',sans-serif;overflow:hidden;touch-action:none}
 canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 #loading{position:fixed;inset:0;background:linear-gradient(135deg,#0a0a1a,#1a0a2e);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:100;transition:opacity .6s}
 #loading.done{opacity:0;pointer-events:none}
-#loading h1{font-size:2.8em;background:linear-gradient(135deg,#e94560,#ff6b6b,#feca57);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:8px}
-#loading p{color:#888;margin-bottom:20px;font-size:14px}
-#loading .bar{width:280px;height:4px;background:#222;border-radius:2px;overflow:hidden}
+#loading h1{font-size:2.2em;background:linear-gradient(135deg,#e94560,#ff6b6b,#feca57);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:6px}
+#loading p{color:#888;margin-bottom:16px;font-size:13px}
+#loading .bar{width:240px;height:4px;background:#222;border-radius:2px;overflow:hidden}
 #loading .bar .fill{height:100%;width:0%;background:linear-gradient(90deg,#e94560,#feca57);border-radius:2px;transition:width .3s}
-#load-status{color:#555;font-size:11px;margin-top:10px}
-#hud{position:fixed;top:12px;left:12px;background:rgba(0,0,0,.65);padding:10px 14px;border-radius:8px;font-size:12px;line-height:1.7;pointer-events:none;z-index:20;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);display:none}
-#hud .title{color:#e94560;font-weight:700;font-size:14px;margin-bottom:3px}
-#hud kbd{background:rgba(255,255,255,.12);padding:1px 5px;border-radius:3px;font-size:10px}
-#coords{color:#777;margin-top:3px;font-size:11px}
-#biome-tag{position:fixed;top:12px;right:12px;background:rgba(0,0,0,.65);padding:8px 14px;border-radius:8px;font-size:14px;color:#feca57;z-index:20;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08);display:none;font-weight:600}
-#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:16px;height:16px;pointer-events:none;z-index:15;display:none}
-#crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,.4)}
+#load-status{color:#555;font-size:10px;margin-top:8px}
+#hud{position:fixed;top:8px;left:8px;background:rgba(0,0,0,.6);padding:8px 12px;border-radius:8px;font-size:11px;line-height:1.6;pointer-events:none;z-index:20;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);display:none}
+#hud .title{color:#e94560;font-weight:700;font-size:13px;margin-bottom:2px}
+#hud kbd{background:rgba(255,255,255,.1);padding:1px 4px;border-radius:3px;font-size:9px}
+#coords{color:#666;margin-top:2px;font-size:10px}
+#biome-tag{position:fixed;top:8px;right:8px;background:rgba(0,0,0,.6);padding:6px 12px;border-radius:8px;font-size:13px;color:#feca57;z-index:20;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08);display:none;font-weight:600}
+#crosshair{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:14px;height:14px;pointer-events:none;z-index:15;display:none}
+#crosshair::before,#crosshair::after{content:'';position:absolute;background:rgba(255,255,255,.35)}
 #crosshair::before{width:1px;height:100%;left:50%;transform:translateX(-50%)}
 #crosshair::after{width:100%;height:1px;top:50%;transform:translateY(-50%)}
-#tip{position:fixed;bottom:56px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.6);padding:5px 12px;border-radius:6px;font-size:11px;color:#888;z-index:20;display:none;pointer-events:none}
-#menu{position:fixed;bottom:8px;left:50%;transform:translateX(-50%);display:none;gap:3px;z-index:20;flex-wrap:wrap;justify-content:center;max-width:92vw;padding:6px 10px;background:rgba(0,0,0,.7);border-radius:10px;backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.08)}
-#menu button{background:rgba(255,255,255,.08);color:#ddd;border:none;padding:4px 9px;border-radius:5px;cursor:pointer;font-size:10px;transition:all .15s}
-#menu button:hover{background:#e94560;color:#fff}
-#menu button.sel{background:#e94560;color:#fff}
+#tip{position:fixed;bottom:54px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.55);padding:4px 10px;border-radius:6px;font-size:10px;color:#777;z-index:20;display:none;pointer-events:none}
+#menu{position:fixed;bottom:6px;left:50%;transform:translateX(-50%);display:none;gap:2px;z-index:20;flex-wrap:wrap;justify-content:center;max-width:94vw;padding:4px 8px;background:rgba(0,0,0,.65);border-radius:8px;backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.08)}
+#menu button{background:rgba(255,255,255,.07);color:#ccc;border:none;padding:3px 7px;border-radius:4px;cursor:pointer;font-size:9px;transition:all .15s}
+#menu button:hover,#menu button.sel{background:#e94560;color:#fff}
 #settings{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:50;backdrop-filter:blur(10px)}
-#settings .panel{background:linear-gradient(135deg,#111122,#1a1030);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:22px 28px;min-width:300px;max-width:92vw}
-#settings h2{color:#e94560;font-size:1.3em;margin-bottom:14px;text-align:center}
+#settings .panel{background:linear-gradient(135deg,#111122,#1a1030);border:1px solid rgba(255,255,255,.1);border-radius:14px;padding:20px 24px;min-width:280px;max-width:92vw}
+#settings h2{color:#e94560;font-size:1.2em;margin-bottom:12px;text-align:center}
 #settings .row{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:12px}
 #settings .row label{color:#999}
-#settings .row input[type=range]{width:120px;accent-color:#e94560}
-#settings .row .val{color:#feca57;min-width:32px;text-align:right;font-weight:700}
-#settings .btn{display:block;margin:14px auto 0;background:#e94560;color:#fff;border:none;padding:7px 22px;border-radius:6px;cursor:pointer;font-size:13px}
+#settings .row input[type=range]{width:110px;accent-color:#e94560}
+#settings .row .val{color:#feca57;min-width:30px;text-align:right;font-weight:700}
+#settings .btn{display:block;margin:12px auto 0;background:#e94560;color:#fff;border:none;padding:7px 20px;border-radius:6px;cursor:pointer;font-size:13px}
 #settings .btn:hover{background:#c0392b}
 #settings .keys{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
-#settings .keys h3{color:#666;font-size:11px;margin-bottom:6px}
-#settings .keys div{font-size:10px;color:#555;line-height:1.7}
+#settings .keys h3{color:#666;font-size:10px;margin-bottom:5px}
+#settings .keys div{font-size:9px;color:#555;line-height:1.6}
 #settings .keys kbd{background:rgba(255,255,255,.08);padding:1px 4px;border-radius:3px;font-size:9px;color:#888}
+/* ===== TOUCH CONTROLS ===== */
+#touch-ctrl{position:fixed;inset:0;z-index:25;display:none;pointer-events:none}
+#joystick{position:absolute;left:20px;bottom:90px;width:100px;height:100px;background:rgba(255,255,255,.05);border-radius:50%;border:2px solid rgba(255,255,255,.1);pointer-events:auto;touch-action:none}
+#joy-knob{position:absolute;width:40px;height:40px;background:rgba(233,69,96,.45);border-radius:50%;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;border:2px solid rgba(233,69,96,.6)}
+#touch-btns{position:absolute;right:16px;bottom:90px;display:flex;flex-direction:column;gap:6px;pointer-events:auto}
+.tbtn{width:44px;height:44px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);border-radius:10px;color:#ddd;font-size:16px;display:flex;align-items:center;justify-content:center;user-select:none;-webkit-user-select:none;touch-action:manipulation}
+.tbtn.touching{background:rgba(233,69,96,.45)!important}
+#look-area{position:absolute;right:16px;bottom:200px;width:70px;height:70px;background:rgba(255,255,255,.03);border-radius:50%;border:1px solid rgba(255,255,255,.06);pointer-events:auto;touch-action:none}
+@media(min-width:768px){#touch-ctrl{display:none!important}}
 </style>
 </head>
 <body>
@@ -70,112 +78,99 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <div><kbd>ESC</kbd> Paramètres / Libérer souris</div></div>
 </div>
 </div>
+<!-- Touch controls -->
+<div id="touch-ctrl">
+<div id="joystick"><div id="joy-knob"></div></div>
+<div id="look-area"></div>
+<div id="touch-btns">
+<div class="tbtn" id="btn-up">⬆</div>
+<div class="tbtn" id="btn-down">⬇</div>
+</div>
+</div>
 <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
 <script>
 // ============ SETUP ============
-const LD=document.getElementById('loading'),LF=document.getElementById('lf'),LS=document.getElementById('ls');
+var LD=document.getElementById('loading'),LF=document.getElementById('lf'),LS=document.getElementById('ls');
 function loadPct(p,t){LF.style.width=p+'%';if(t)LS.textContent=t}
 
-const scene=new THREE.Scene();
-const camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,.1,500);
-const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+var scene=new THREE.Scene();
+var camera=new THREE.PerspectiveCamera(70,window.innerWidth/window.innerHeight,.1,500);
+var renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
 renderer.setSize(window.innerWidth,window.innerHeight);
 renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 document.body.appendChild(renderer.domElement);
-
-loadPct(8,'Chargement Three.js...');
+loadPct(8,'Chargement...');
 
 // ============ BIOMES ============
-const BIOMES=[
-{n:'🌲 Forêt',top:0x4a8c3f,dirt:0x6b4226,sky:0x87ceeb,fog:0x88aa88,d:.12,h:4,t:0x2d6b1e,tr:0x6b4226,s:!1},
-{n:'🏔️ Montagne',top:0xe8e8e8,dirt:0x808080,sky:0xb0c4de,fog:0xbbbbbb,d:.04,h:10,t:0x556b2f,tr:0x654321,s:!1},
-{n:'🏜️ Désert',top:0xf0d890,dirt:0xd4a574,sky:0xffd700,fog:0xd4a574,d:.01,h:2,t:0xdaa520,tr:0x8b7355,s:!1},
-{n:'❄️ Toundra',top:0xffffff,dirt:0xe0e0e0,sky:0xadd8e6,fog:0xdddddd,d:.02,h:2,t:0x2f4f4f,tr:0x4a4a4a,s:!0},
-{n:'🌋 Volcan',top:0x3d0c02,dirt:0x4a0e0e,sky:0x8b0000,fog:0x4a0e0e,d:.03,h:5,t:0x8b0000,tr:0x2d0000,s:!1},
-{n:'🌊 Océan',top:0x0096c7,dirt:0x0077b6,sky:0x00b4d8,fog:0x0077b6,d:0,h:1,t:0x20b2aa,tr:0x008080,s:!1},
-{n:'🌿 Jungle',top:0x2d7a2d,dirt:0x1a5c1a,sky:0x4a7c59,fog:0x2d5a27,d:.18,h:5,t:0x006400,tr:0x5c4033,s:!1},
-{n:'💎 Crystal',top:0x9b59b6,dirt:0x8e44ad,sky:0xd2b4de,fog:0x9b59b6,d:.05,h:3,t:0xe74c3c,tr:0x6c3483,s:!1},
-{n:'🍄 Champignon',top:0x8b008b,dirt:0x9932cc,sky:0xda70d6,fog:0x9932cc,d:.07,h:3,t:0xff6347,tr:0x8b008b,s:!1},
-{n:'🌾 Plaine',top:0x7cba3d,dirt:0x8bc34a,sky:0x87ceeb,fog:0xa8d8a8,d:.03,h:2,t:0x6b8e23,tr:0x8b7355,s:!1},
-{n:'🏛️ Ruines',top:0x8b8682,dirt:0xa8a39d,sky:0xc0b283,fog:0x8b8682,d:.02,h:3,t:0x696969,tr:0x4a4a4a,s:!1},
-{n:'🌙 Sombre',top:0x1a1a2e,dirt:0x16213e,sky:0x0f3460,fog:0x1a1a2e,d:.08,h:3,t:0x2c003e,tr:0x1a001a,s:!1},
-{n:'🔥 Lave',top:0xff4500,dirt:0xff6347,sky:0xff8c00,fog:0xff4500,d:.01,h:2,t:0xff0000,tr:0x8b0000,s:!1},
-{n:'☁️ Ciel',top:0xf0f8ff,dirt:0xe6f3ff,sky:0x87ceeb,fog:0xe6f3ff,d:.01,h:2,t:0xffffff,tr:0xdddddd,s:!1},
-{n:'🌺 Floral',top:0xff69b4,dirt:0xffb6c1,sky:0xffe4e1,fog:0xffb6c1,d:.1,h:2,t:0xff1493,tr:0xc71585,s:!1},
-{n:'⚡ Tempête',top:0x2c3e50,dirt:0x34495e,sky:0x1a1a2e,fog:0x2c3e50,d:.03,h:3,t:0x1abc9c,tr:0x16a085,s:!1}
+var BIOMES=[
+{n:'🌲 Forêt',top:0x4a8c3f,dt:0x6b4226,sky:0x87ceeb,fog:0x88aa88,d:.12,h:4,t:0x2d6b1e,tr:0x6b4226,sn:false},
+{n:'🏔️ Montagne',top:0xe8e8e8,dt:0x808080,sky:0xb0c4de,fog:0xbbbbbb,d:.04,h:10,t:0x556b2f,tr:0x654321,sn:false},
+{n:'🏜️ Désert',top:0xf0d890,dt:0xd4a574,sky:0xffd700,fog:0xd4a574,d:.01,h:2,t:0xdaa520,tr:0x8b7355,sn:false},
+{n:'❄️ Toundra',top:0xffffff,dt:0xe0e0e0,sky:0xadd8e6,fog:0xdddddd,d:.02,h:2,t:0x2f4f4f,tr:0x4a4a4a,sn:true},
+{n:'🌋 Volcan',top:0x3d0c02,dt:0x4a0e0e,sky:0x8b0000,fog:0x4a0e0e,d:.03,h:5,t:0x8b0000,tr:0x2d0000,sn:false},
+{n:'🌊 Océan',top:0x0096c7,dt:0x0077b6,sky:0x00b4d8,fog:0x0077b6,d:0,h:1,t:0x20b2aa,tr:0x008080,sn:false},
+{n:'🌿 Jungle',top:0x2d7a2d,dt:0x1a5c1a,sky:0x4a7c59,fog:0x2d5a27,d:.18,h:5,t:0x006400,tr:0x5c4033,sn:false},
+{n:'💎 Crystal',top:0x9b59b6,dt:0x8e44ad,sky:0xd2b4de,fog:0x9b59b6,d:.05,h:3,t:0xe74c3c,tr:0x6c3483,sn:false},
+{n:'🍄 Champignon',top:0x8b008b,dt:0x9932cc,sky:0xda70d6,fog:0x9932cc,d:.07,h:3,t:0xff6347,tr:0x8b008b,sn:false},
+{n:'🌾 Plaine',top:0x7cba3d,dt:0x8bc34a,sky:0x87ceeb,fog:0xa8d8a8,d:.03,h:2,t:0x6b8e23,tr:0x8b7355,sn:false},
+{n:'🏛️ Ruines',top:0x8b8682,dt:0xa8a39d,sky:0xc0b283,fog:0x8b8682,d:.02,h:3,t:0x696969,tr:0x4a4a4a,sn:false},
+{n:'🌙 Sombre',top:0x1a1a2e,dt:0x16213e,sky:0x0f3460,fog:0x1a1a2e,d:.08,h:3,t:0x2c003e,tr:0x1a001a,sn:false},
+{n:'🔥 Lave',top:0xff4500,dt:0xff6347,sky:0xff8c00,fog:0xff4500,d:.01,h:2,t:0xff0000,tr:0x8b0000,sn:false},
+{n:'☁️ Ciel',top:0xf0f8ff,dt:0xe6f3ff,sky:0x87ceeb,fog:0xe6f3ff,d:.01,h:2,t:0xffffff,tr:0xdddddd,sn:false},
+{n:'🌺 Floral',top:0xff69b4,dt:0xffb6c1,sky:0xffe4e1,fog:0xffb6c1,d:.1,h:2,t:0xff1493,tr:0xc71585,sn:false},
+{n:'⚡ Tempête',top:0x2c3e50,dt:0x34495e,sky:0x1a1a2e,fog:0x2c3e50,d:.03,h:3,t:0x1abc9c,tr:0x16a085,sn:false}
 ];
 
-// ============ VOXEL WORLD ============
-const MAX_V=50000;
-let vMesh=null;
-let ground=null;
-const dummy=new THREE.Object3D();
-const col=new THREE.Color();
-let maxH=8;
+var MAX_V=50000, vMesh=null, ground=null, biomeIndex=0, maxH=8;
+var dummy=new THREE.Object3D(), col=new THREE.Color();
 
 function buildWorld(biomeIdx){
-  const b=BIOMES[biomeIdx];
+  var b=BIOMES[biomeIdx];
   scene.background=new THREE.Color(b.sky);
   scene.fog=new THREE.FogExp2(b.fog,.008);
-
-  // Lights
-  scene.children.filter(c=>c.isLight).forEach(c=>scene.remove(c));
+  scene.children.filter(function(c){return c.isLight}).forEach(function(c){scene.remove(c)});
   scene.add(new THREE.AmbientLight(0xffffff,.55));
-  const sun=new THREE.DirectionalLight(0xffffff,.85);
+  var sun=new THREE.DirectionalLight(0xffffff,.85);
   sun.position.set(40,60,25);
   scene.add(sun);
-
-  // Remove old
   if(vMesh){scene.remove(vMesh);vMesh.geometry.dispose();vMesh.material.dispose()}
   if(ground){scene.remove(ground);ground.geometry.dispose();ground.material.dispose()}
-
-  // Ground plane
-  const gG=new THREE.PlaneGeometry(200,200);
-  const gM=new THREE.MeshLambertMaterial({color:b.top});
+  var gG=new THREE.PlaneGeometry(200,200);
+  var gM=new THREE.MeshLambertMaterial({color:b.top});
   ground=new THREE.Mesh(gG,gM);
   ground.rotation.x=-Math.PI/2;
   ground.position.y=-.5;
   scene.add(ground);
-
-  // New instanced mesh
   vMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),new THREE.MeshLambertMaterial(),MAX_V);
   vMesh.count=0;
-
-  let cnt=0;
-  const R=38;
-
-  for(let x=-R;x<R;x++){
-    for(let z=-R;z<R;z++){
-      // Terrain height
-      let h=Math.floor(Math.sin(x*.07)*2.5+Math.cos(z*.1)*2+Math.sin((x+z)*.04)*3.5);
+  var cnt=0, R=38;
+  for(var x=-R;x<R;x++){
+    for(var z=-R;z<R;z++){
+      var h=Math.floor(Math.sin(x*.07)*2.5+Math.cos(z*.1)*2+Math.sin((x+z)*.04)*3.5);
       h=Math.max(0,h+b.h);
-      if(biomeIndex===1)h+=Math.floor(Math.abs(x)*.1+Math.abs(z)*.07);
-      if(biomeIndex===5)h=Math.min(h,1);
+      if(biomeIdx===1)h+=Math.floor(Math.abs(x)*.1+Math.abs(z)*.07);
+      if(biomeIdx===5)h=Math.min(h,1);
       h=Math.min(h,maxH);
-
-      // Column
-      for(let y=0;y<=h;y++){
+      for(var y=0;y<=h;y++){
         if(cnt>=MAX_V)break;
         dummy.position.set(x+.5,y,z+.5);
         dummy.updateMatrix();
         vMesh.setMatrixAt(cnt,dummy.matrix);
         if(y===h)vMesh.setColorAt(cnt,col.setHex(b.top));
         else if(y<h*.35)vMesh.setColorAt(cnt,col.setHex(0x6b5b4f));
-        else vMesh.setColorAt(cnt,col.setHex(b.dirt));
+        else vMesh.setColorAt(cnt,col.setHex(b.dt));
         cnt++;
       }
-
-      // Trees
       if(cnt<MAX_V&&Math.random()<b.d&&h>=2){
-        const tH=3+Math.floor(Math.random()*3);
-        for(let ty=0;ty<tH&&cnt<MAX_V;ty++){
+        var tH=3+Math.floor(Math.random()*3);
+        for(var ty=0;ty<tH&&cnt<MAX_V;ty++){
           dummy.position.set(x+.5,h+1+ty,z+.5);
           dummy.updateMatrix();
           vMesh.setMatrixAt(cnt,dummy.matrix);
           vMesh.setColorAt(cnt,col.setHex(ty<tH-1?b.tr:b.t));
           cnt++;
         }
-        for(let lx=-1;lx<=1;lx++)for(let lz=-1;lz<=1;lz++){
+        for(var lx=-1;lx<=1;lx++)for(var lz=-1;lz<=1;lz++){
           if(cnt>=MAX_V)break;
           if(!lx&&!lz)continue;
           dummy.position.set(x+.5+lx,h+tH,z+.5+lz);
@@ -185,29 +180,24 @@ function buildWorld(biomeIdx){
           cnt++;
         }
       }
-
-      // Snow caps
-      if(b.s&&h>=4&&cnt<MAX_V){
+      if(b.sn&&h>=4&&cnt<MAX_V){
         dummy.position.set(x+.5,h+1,z+.5);
         dummy.updateMatrix();
         vMesh.setMatrixAt(cnt,dummy.matrix);
         vMesh.setColorAt(cnt,col.setHex(0xffffff));
         cnt++;
       }
-
-      // Crystals
       if(biomeIdx===7&&Math.random()<.025&&cnt<MAX_V){
-        const cH=2+Math.floor(Math.random()*3);
-        for(let cy=0;cy<cH&&cnt<MAX_V;cy++){
+        var cH=2+Math.floor(Math.random()*3);
+        var cColors=[0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6];
+        for(var cy=0;cy<cH&&cnt<MAX_V;cy++){
           dummy.position.set(x+.5,h+1+cy,z+.5);
           dummy.updateMatrix();
           vMesh.setMatrixAt(cnt,dummy.matrix);
-          vMesh.setColorAt(cnt,col.setHex([0xe74c3c,0x3498db,0x2ecc71,0xf39c12,0x9b59b6][cy%5]));
+          vMesh.setColorAt(cnt,col.setHex(cColors[cy%5]));
           cnt++;
         }
       }
-
-      // Lava pools
       if(biomeIdx===11&&Math.random()<.012&&cnt<MAX_V){
         dummy.position.set(x+.5,0,z+.5);
         dummy.updateMatrix();
@@ -215,11 +205,9 @@ function buildWorld(biomeIdx){
         vMesh.setColorAt(cnt,col.setHex(0xff4500));
         cnt++;
       }
-
-      // Mushrooms
       if(biomeIdx===8&&Math.random()<.04&&cnt<MAX_V){
-        const mH=1+Math.floor(Math.random()*2);
-        for(let my=0;my<mH&&cnt<MAX_V;my++){
+        var mH=1+Math.floor(Math.random()*2);
+        for(var my=0;my<mH&&cnt<MAX_V;my++){
           dummy.position.set(x+.5,h+1+my,z+.5);
           dummy.updateMatrix();
           vMesh.setMatrixAt(cnt,dummy.matrix);
@@ -229,46 +217,41 @@ function buildWorld(biomeIdx){
       }
     }
   }
-
   vMesh.count=cnt;
   vMesh.instanceMatrix.needsUpdate=true;
   if(vMesh.instanceColor)vMesh.instanceColor.needsUpdate=true;
   scene.add(vMesh);
-
   camera.position.set(0,12,25);
   camera.lookAt(0,0,0);
 }
-
-let biomeIndex=0;
 
 function switchBiome(i){
   biomeIndex=i;
   buildWorld(i);
   document.getElementById('biome-tag').textContent=BIOMES[i].n;
-  document.querySelectorAll('#menu button').forEach((b,idx)=>b.classList.toggle('sel',idx===i));
+  var btns=document.querySelectorAll('#menu button');
+  btns.forEach(function(b,idx){b.classList.toggle('sel',idx===i)});
 }
 
 loadPct(20,'Génération du monde...');
 buildWorld(0);
 
 // ============ MENU ============
-const menu=document.getElementById('menu');
-BIOMES.forEach((b,i)=>{
-  const btn=document.createElement('button');
+var menu=document.getElementById('menu');
+BIOMES.forEach(function(b,i){
+  var btn=document.createElement('button');
   btn.textContent=b.n;
-  btn.onclick=()=>{switchBiome(i);if(pointerLocked)document.exitPointerLock()};
+  btn.onclick=function(){switchBiome(i)};
   if(i===0)btn.classList.add('sel');
   menu.appendChild(btn);
 });
 
 // ============ CONTROLS ============
 loadPct(60,'Configuration...');
-const keys={};
-let pitch=-.25,yaw=0;
-let pointerLocked=false;
-let moveSpd=50;
-let mouseSens=3;
-let settingsOpen=false;
+var keys={};
+var pitch=-.25,yaw=0;
+var pointerLocked=false;
+var moveSpd=50, mouseSens=3, settingsOpen=false;
 
 function openSettings(){
   settingsOpen=true;
@@ -280,65 +263,160 @@ function closeSettings(){
   document.getElementById('settings').style.display='none';
 }
 
-document.addEventListener('keydown',e=>{
+document.addEventListener('keydown',function(e){
   keys[e.code]=true;
   if(e.code==='Escape'){
-    if(settingsOpen){closeSettings()}
-    else if(pointerLocked){document.exitPointerLock()}
-    else{openSettings()}
+    if(settingsOpen)closeSettings();
+    else if(pointerLocked)document.exitPointerLock();
+    else openSettings();
   }
-  if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].includes(e.code))e.preventDefault();
+  if(['Space','KeyW','KeyA','KeyS','KeyD','ShiftLeft','ShiftRight'].indexOf(e.code)>=0)e.preventDefault();
 });
-document.addEventListener('keyup',e=>keys[e.code]=false);
+document.addEventListener('keyup',function(e){keys[e.code]=false});
 
-document.addEventListener('mousemove',e=>{
+document.addEventListener('mousemove',function(e){
   if(!pointerLocked)return;
   yaw-=e.movementX*.001*mouseSens;
   pitch-=e.movementY*.001*mouseSens;
   pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
 });
 
-renderer.domElement.addEventListener('click',()=>{
+renderer.domElement.addEventListener('click',function(){
   if(!pointerLocked&&!settingsOpen){
     renderer.domElement.requestPointerLock();
     document.getElementById('tip').style.display='none';
   }
 });
 
-document.addEventListener('pointerlockchange',()=>{
+document.addEventListener('pointerlockchange',function(){
   pointerLocked=document.pointerLockElement===renderer.domElement;
 });
 
-// Number keys
-document.addEventListener('keydown',e=>{
-  const n=parseInt(e.key);
+document.addEventListener('keydown',function(e){
+  var n=parseInt(e.key);
   if(n>=1&&n<=9)switchBiome(n-1);
-  const np={Numpad0:9,Numpad1:10,Numpad2:11,Numpad3:12,Numpad4:13,Numpad5:14,Numpad6:15};
+  var np={Numpad0:9,Numpad1:10,Numpad2:11,Numpad3:12,Numpad4:13,Numpad5:14,Numpad6:15};
   if(np[e.code]!==undefined)switchBiome(np[e.code]);
 });
 
 // Settings UI
 document.getElementById('sClose').onclick=closeSettings;
-document.getElementById('sSpd').oninput=e=>{moveSpd=+e.target.value;document.getElementById('sSpdV').textContent=moveSpd};
-document.getElementById('sSens').oninput=e=>{mouseSens=+e.target.value;document.getElementById('sSensV').textContent=mouseSens};
-document.getElementById('sFog').oninput=e=>{
-  const v=+e.target.value;document.getElementById('sFogV').textContent=v;
-  if(scene.fog)scene.fog.density=80/v*.01;
-};
-document.getElementById('sH').oninput=e=>{maxH=+e.target.value;document.getElementById('sHV').textContent=maxH;switchBiome(biomeIndex)};
+document.getElementById('sSpd').oninput=function(e){moveSpd=+e.target.value;document.getElementById('sSpdV').textContent=moveSpd};
+document.getElementById('sSens').oninput=function(e){mouseSens=+e.target.value;document.getElementById('sSensV').textContent=mouseSens};
+document.getElementById('sFog').oninput=function(e){var v=+e.target.value;document.getElementById('sFogV').textContent=v;if(scene.fog)scene.fog.density=80/v*.01};
+document.getElementById('sH').oninput=function(e){maxH=+e.target.value;document.getElementById('sHV').textContent=maxH;switchBiome(biomeIndex)};
 
-// Resize
-window.addEventListener('resize',()=>{
+window.addEventListener('resize',function(){
   camera.aspect=window.innerWidth/window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth,window.innerHeight);
 });
 
+// ============ TOUCH CONTROLS ============
+var isTouchDevice=false;
+if('ontouchstart' in window||navigator.maxTouchPoints>0) isTouchDevice=true;
+
+if(isTouchDevice){
+  document.getElementById('touch-ctrl').style.display='block';
+  document.getElementById('tip').textContent='Joystick: bouger · Côté droit: regarder · Boutons: haut/bas';
+}
+
+// Joystick
+var joyEl=document.getElementById('joystick');
+var knobEl=document.getElementById('joy-knob');
+var joyId=null, joyCX=0, joyCY=0, joyDX=0, joyDY=0;
+
+joyEl.addEventListener('touchstart',function(e){
+  e.preventDefault();
+  joyId=e.changedTouches[0].identifier;
+  var r=joyEl.getBoundingClientRect();
+  joyCX=r.left+r.width/2;
+  joyCY=r.top+r.height/2;
+  updateJoy(e.changedTouches[0]);
+},{passive:false});
+
+joyEl.addEventListener('touchmove',function(e){
+  e.preventDefault();
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===joyId){updateJoy(e.changedTouches[i]);break;}
+  }
+},{passive:false});
+
+function endJoy(e){
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===joyId){
+      joyId=null;joyDX=0;joyDY=0;
+      knobEl.style.transform='translate(-50%,-50%)';
+      break;
+    }
+  }
+}
+joyEl.addEventListener('touchend',endJoy);
+joyEl.addEventListener('touchcancel',endJoy);
+
+function updateJoy(t){
+  var dx=t.clientX-joyCX, dy=t.clientY-joyCY;
+  var dist=Math.sqrt(dx*dx+dy*dy);
+  var maxR=30;
+  if(dist>maxR){dx=dx/dist*maxR;dy=dy/dist*maxR;}
+  joyDX=dx/maxR; joyDY=dy/maxR;
+  knobEl.style.transform='translate(calc(-50% + '+dx+'px),calc(-50% + '+dy+'px))';
+}
+
+// Look area (right side drag)
+var lookEl=document.getElementById('look-area');
+var lookId=null, lookLastX=0, lookLastY=0;
+
+lookEl.addEventListener('touchstart',function(e){
+  e.preventDefault();
+  lookId=e.changedTouches[0].identifier;
+  lookLastX=e.changedTouches[0].clientX;
+  lookLastY=e.changedTouches[0].clientY;
+},{passive:false});
+
+lookEl.addEventListener('touchmove',function(e){
+  e.preventDefault();
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===lookId){
+      var dx=e.changedTouches[i].clientX-lookLastX;
+      var dy=e.changedTouches[i].clientY-lookLastY;
+      yaw-=dx*.004;
+      pitch-=dy*.004;
+      pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
+      lookLastX=e.changedTouches[i].clientX;
+      lookLastY=e.changedTouches[i].clientY;
+      break;
+    }
+  }
+},{passive:false});
+
+lookEl.addEventListener('touchend',function(e){
+  for(var i=0;i<e.changedTouches.length;i++){
+    if(e.changedTouches[i].identifier===lookId){lookId=null;break;}
+  }
+});
+
+// Up/Down buttons
+var btnUp=document.getElementById('btn-up');
+var btnDown=document.getElementById('btn-down');
+
+function touchBtn(btn,code){
+  btn.addEventListener('touchstart',function(e){
+    e.preventDefault();keys[code]=true;btn.classList.add('touching');
+  },{passive:false});
+  btn.addEventListener('touchend',function(e){
+    e.preventDefault();keys[code]=false;btn.classList.remove('touching');
+  },{passive:false});
+  btn.addEventListener('touchcancel',function(){keys[code]=false;btn.classList.remove('touching')});
+}
+touchBtn(btnUp,'Space');
+touchBtn(btnDown,'ShiftLeft');
+
 // ============ LOOP ============
 loadPct(100,'Prêt !');
-setTimeout(()=>{
+setTimeout(function(){
   LD.classList.add('done');
-  setTimeout(()=>LD.style.display='none',600);
+  setTimeout(function(){LD.style.display='none'},600);
   document.getElementById('hud').style.display='block';
   document.getElementById('biome-tag').style.display='block';
   document.getElementById('crosshair').style.display='block';
@@ -346,24 +424,33 @@ setTimeout(()=>{
   menu.style.display='flex';
 },400);
 
-const clock=new THREE.Clock();
+var clock=new THREE.Clock();
 (function loop(){
   requestAnimationFrame(loop);
-  const dt=Math.min(clock.getDelta(),.1);
-  const spd=moveSpd*dt;
-  const fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
-  const right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+  var dt=Math.min(clock.getDelta(),.1);
+  var spd=moveSpd*dt;
+  var fwd=new THREE.Vector3(-Math.sin(yaw),0,-Math.cos(yaw));
+  var right=new THREE.Vector3(Math.cos(yaw),0,-Math.sin(yaw));
+
+  // Keyboard
   if(keys['KeyW'])camera.position.addScaledVector(fwd,spd);
   if(keys['KeyS'])camera.position.addScaledVector(fwd,-spd*.7);
   if(keys['KeyA'])camera.position.addScaledVector(right,-spd);
   if(keys['KeyD'])camera.position.addScaledVector(right,spd);
   if(keys['Space'])camera.position.y+=spd;
   if(keys['ShiftLeft']||keys['ShiftRight'])camera.position.y-=spd;
+
+  // Touch joystick
+  if(joyId!==null){
+    camera.position.addScaledVector(fwd,-joyDY*spd);
+    camera.position.addScaledVector(right,joyDX*spd);
+  }
+
   camera.rotation.order='YXZ';
   camera.rotation.y=yaw;
   camera.rotation.x=pitch;
-  const p=camera.position;
-  document.getElementById('coords').textContent=`X:${Math.round(p.x)} Y:${Math.round(p.y)} Z:${Math.round(p.z)}`;
+  var p=camera.position;
+  document.getElementById('coords').textContent='X:'+Math.round(p.x)+' Y:'+Math.round(p.y)+' Z:'+Math.round(p.z);
   renderer.render(scene,camera);
 })();
 </script>
