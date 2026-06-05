@@ -127,6 +127,34 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,2));
 document.body.appendChild(renderer.domElement);
 loadPct(8,'Chargement...');
 
+// ============ GRID ============
+// Grille au sol: de -200000 à +200000
+var G_HALF=200000, G_STEP=500; // tous les 500 unités = 800 lignes total
+var G_CNT=Math.floor(G_HALF/G_STEP);
+var gPos=new Float32Array(G_CNT*4*6);
+var idx=0;
+for(var i=-G_HALF;i<=G_HALF;i+=G_STEP){
+  gPos[idx++]=i;gPos[idx++]=0;gPos[idx++]=-G_HALF;
+  gPos[idx++]=i;gPos[idx++]=0;gPos[idx++]=G_HALF;
+  gPos[idx++]=-G_HALF;gPos[idx++]=0;gPos[idx++]=i;
+  gPos[idx++]=G_HALF;gPos[idx++]=0;gPos[idx++]=i;
+}
+var gGeom=new THREE.BufferGeometry();
+gGeom.setAttribute('position',new THREE.BufferAttribute(gPos,3));
+var gMat=new THREE.LineBasicMaterial({color:0x2a2a3a,transparent:true,opacity:.1});
+scene.add(new THREE.LineSegments(gGeom,gMat));
+
+// Axe Z principal (bleu, plus visible)
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,-G_HALF),new THREE.Vector3(0,0,G_HALF)]),
+  new THREE.LineBasicMaterial({color:0x3344aa,transparent:true,opacity:.25})
+));
+// Axe X principal (rouge, plus visible)
+scene.add(new THREE.Line(
+  new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-G_HALF,0,0),new THREE.Vector3(G_HALF,0,0)]),
+  new THREE.LineBasicMaterial({color:0xaa3333,transparent:true,opacity:.25})
+));
+
 // ============ BIOMES ============
 var BIOMES=[
 {n:'🌲 Forêt',top:0x4a8c3f,dt:0x6b4226,sky:0x87ceeb,fog:0x88aa88,d:.12,h:4,t:0x2d6b1e,tr:0x6b4226,sn:false},
