@@ -89,6 +89,8 @@ canvas{display:block;position:fixed;top:0;left:0;z-index:1}
 <h2>⚙️ Paramètres</h2>
 <div class="row"><label>Vitesse</label><input type="range" id="sSpd" min="10" max="120" value="50"><span class="val" id="sSpdV">50</span></div>
 <div class="row"><label>Sensibilité</label><input type="range" id="sSens" min="1" max="10" value="3"><span class="val" id="sSensV">3</span></div>
+<div class="row"><label>Vitesse tactile</label><input type="range" id="sTouch" min="10" max="100" value="40"><span class="val" id="sTouchV">40</span></div>
+<div class="row"><label>Sensibilité tactile</label><input type="range" id="sTouchSens" min="1" max="10" value="3"><span class="val" id="sTouchSensV">3</span></div>
 <div class="row"><label>Distance</label><input type="range" id="sFog" min="20" max="200" value="100"><span class="val" id="sFogV">100</span></div>
 <div class="row"><label>Hauteur max</label><input type="range" id="sH" min="2" max="20" value="8"><span class="val" id="sHV">8</span></div>
 <button class="btn" id="sClose">✕ Fermer</button>
@@ -395,6 +397,7 @@ var keys={};
 var pitch=-.25,yaw=0;
 var pointerLocked=false;
 var moveSpd=50, mouseSens=3, settingsOpen=false;
+var touchSpd=40, touchSens=3;
 
 function openSettings(){
   settingsOpen=true;
@@ -440,6 +443,8 @@ document.addEventListener('keydown',function(e){
 document.getElementById('sClose').onclick=closeSettings;
 document.getElementById('sSpd').oninput=function(e){moveSpd=+e.target.value;document.getElementById('sSpdV').textContent=moveSpd};
 document.getElementById('sSens').oninput=function(e){mouseSens=+e.target.value;document.getElementById('sSensV').textContent=mouseSens};
+document.getElementById('sTouch').oninput=e=>{touchSpd=+e.target.value;document.getElementById('sTouchV').textContent=touchSpd};
+document.getElementById('sTouchSens').oninput=e=>{touchSens=+e.target.value;document.getElementById('sTouchSensV').textContent=touchSens};
 document.getElementById('sFog').oninput=function(e){var v=+e.target.value;document.getElementById('sFogV').textContent=v;if(scene.fog)scene.fog.density=80/v*.01};
 document.getElementById('sH').oninput=function(e){maxH=+e.target.value;document.getElementById('sHV').textContent=maxH;switchBiome(biomeIndex)};
 window.addEventListener('resize',function(){
@@ -541,16 +546,17 @@ var clock=new THREE.Clock();
 
   // Touch: move joystick
   if(isTouch){
+    var ts=touchSpd/50;
     var mdx=moveJoy.getDX(), mdy=moveJoy.getDY();
     if(Math.abs(mdx)>.05||Math.abs(mdy)>.05){
-      camera.position.addScaledVector(fwd,-mdy*spd);
-      camera.position.addScaledVector(right,mdx*spd);
+      camera.position.addScaledVector(fwd,-mdy*spd*ts);
+      camera.position.addScaledVector(right,mdx*spd*ts);
     }
     // Touch: look joystick
     var ldx=lookJoy.getDX(), ldy=lookJoy.getDY();
     if(Math.abs(ldx)>.05||Math.abs(ldy)>.05){
-      yaw-=ldx*.04;
-      pitch-=ldy*.04;
+      yaw-=ldx*.04*(touchSens/3);
+      pitch-=ldy*.04*(touchSens/3);
       pitch=Math.max(-Math.PI/2+.05,Math.min(Math.PI/2-.05,pitch));
     }
   }
